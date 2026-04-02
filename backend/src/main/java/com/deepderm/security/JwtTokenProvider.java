@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -26,9 +25,16 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
+    /** Generate token for a Doctor (role = DOCTOR) */
     public String generateToken(String email) {
+        return generateToken(email, "DOCTOR");
+    }
+
+    /** Generate token with explicit role claim */
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .subject(email)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key())
@@ -42,6 +48,20 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            Object role = Jwts.parser()
+                    .verifyWith(key())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("role");
+            return role != null ? role.toString() : "DOCTOR";
+        } catch (Exception e) {
+            return "DOCTOR";
+        }
     }
 
     public boolean validateToken(String token) {

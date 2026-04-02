@@ -23,6 +23,18 @@ public class Patient {
     @Column(nullable = false, length = 10)
     private String gender;
 
+    @Column(unique = true)
+    private String email;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+    @Column(name = "photo_upload_period_days")
+    private Integer photoUploadPeriodDays = 30;
+
+    @Column(name = "last_photo_uploaded_at")
+    private Instant lastPhotoUploadedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
@@ -48,6 +60,14 @@ public class Patient {
     public void setAge(Integer age) { this.age = age; }
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public Integer getPhotoUploadPeriodDays() { return photoUploadPeriodDays; }
+    public void setPhotoUploadPeriodDays(Integer photoUploadPeriodDays) { this.photoUploadPeriodDays = photoUploadPeriodDays; }
+    public Instant getLastPhotoUploadedAt() { return lastPhotoUploadedAt; }
+    public void setLastPhotoUploadedAt(Instant lastPhotoUploadedAt) { this.lastPhotoUploadedAt = lastPhotoUploadedAt; }
     public Doctor getDoctor() { return doctor; }
     public void setDoctor(Doctor doctor) { this.doctor = doctor; }
     public Instant getCreatedAt() { return createdAt; }

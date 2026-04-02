@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface DoctorNoteRepository extends JpaRepository<DoctorNote, UUID> {
     List<DoctorNote> findByPatientIdOrderByCreatedAtDesc(UUID patientId);
+    long countByPatientId(UUID patientId);
 }

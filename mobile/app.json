@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "DeepDerm Hasta",
+    "slug": "deepderm-hasta",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0EA5E9"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.deepderm.hasta",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Akne tedavinizin takibi için yüz fotoğrafı çekmek üzere kameraya erişim gereklidir.",
+        "NSPhotoLibraryUsageDescription": "Fotoğraflarınıza erişim gerekmektedir."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0EA5E9"
+      },
+      "package": "com.deepderm.hasta",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Akne tedavinizin takibi için yüz fotoğrafı çekmek üzere kamera erişimi gereklidir."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0EA5E9"
+        }
+      ],
+      "expo-font"
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface EmergencyAlertRepository extends JpaRepository<EmergencyAlert, UUID> {
     List<EmergencyAlert> findByPatientIdOrderBySentAtDesc(UUID patientId);
     List<EmergencyAlert> findByPatientDoctorIdAndResolvedFalseOrderBySentAtDesc(UUID doctorId);
+    long countByPatientIdAndSentAtAfter(UUID patientId, java.time.Instant after);
 }

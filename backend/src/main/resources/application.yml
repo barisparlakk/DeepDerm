@@ -22,6 +22,15 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+  web:
+    resources:
+      static-locations: file:uploads/,classpath:/static/
+
 server:
   port: 8080
   servlet:
@@ -31,6 +40,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:deepderm-super-secret-key-change-in-production-must-be-32-chars-min}
     expiration-ms: 86400000   # 24 hours
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 logging:
   level:

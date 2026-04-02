@@ -1,6 +1,7 @@
 package com.deepderm.security;
 
 import com.deepderm.repository.DoctorRepository;
+import com.deepderm.repository.PatientRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, DoctorRepository doctorRepository) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
+                                   DoctorRepository doctorRepository,
+                                   PatientRepository patientRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.doctorRepository = doctorRepository;
+        this.patientRepository = patientRepository;
     }
 
     @Override
@@ -36,11 +41,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = extractToken(request);
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             String email = jwtTokenProvider.getEmailFromToken(token);
-            doctorRepository.findByEmail(email).ifPresent(doctor -> {
-                var auth = new UsernamePasswordAuthenticationToken(
-                        doctor, null, List.of(new SimpleGrantedAuthority("ROLE_DOCTOR")));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            });
+            String role  = jwtTokenProvider.getRoleFromToken(token);
+
+            if ("PATIENT".equals(role)) {
+                patientRepository.findByEmail(email).ifPresent(patient -> {
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            patient, null, List.of(new SimpleGrantedAuthority("ROLE_PATIENT")));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                });
+            } else {
+                // Default: DOCTOR (handles old tokens without role claim)
+                doctorRepository.findByEmail(email).ifPresent(doctor -> {
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            doctor, null, List.of(new SimpleGrantedAuthority("ROLE_DOCTOR")));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                });
+            }
         }
         filterChain.doFilter(request, response);
     }
