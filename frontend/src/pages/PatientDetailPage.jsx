@@ -41,7 +41,7 @@ function PhotoViewer({ photos }) {
   const [compareA, setCompareA] = useState(null);
   const [compareB, setCompareB] = useState(null);
 
-  const grouped = groupByDate(photos, 'uploaded_at');
+  const grouped = groupByDate(photos, 'uploadedAt');
   const dateKeys = Object.keys(grouped);
 
   return (
@@ -85,7 +85,7 @@ function PhotoViewer({ photos }) {
                       className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isA ? 'border-blue-500' : isB ? 'border-emerald-500' : 'border-transparent hover:border-slate-300'
                         }`}
                     >
-                      <img src={ph.file_url} alt="" className="w-full h-full object-cover" />
+                      <img src={ph.fileUrl} alt="" className="w-full h-full object-cover" />
                       {isA && <div className="absolute top-1 left-1 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">ÖNCEKİ</div>}
                       {isB && <div className="absolute top-1 left-1 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">SONRAKİ</div>}
                     </div>
@@ -96,13 +96,13 @@ function PhotoViewer({ photos }) {
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <p className="text-xs font-medium text-blue-700 mb-2">Önceki — {ANGLE_LABELS[compareA.angle]}</p>
-                    <img src={compareA.file_url} alt="Önceki" className="w-full rounded-xl border border-slate-200" />
-                    <p className="text-xs text-slate-400 mt-1 text-center">{formatDate(compareA.uploaded_at)}</p>
+                    <img src={compareA.fileUrl} alt="Önceki" className="w-full rounded-xl border border-slate-200" />
+                    <p className="text-xs text-slate-400 mt-1 text-center">{formatDate(compareA.uploadedAt)}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-emerald-700 mb-2">Sonraki — {ANGLE_LABELS[compareB.angle]}</p>
-                    <img src={compareB.file_url} alt="Sonraki" className="w-full rounded-xl border border-slate-200" />
-                    <p className="text-xs text-slate-400 mt-1 text-center">{formatDate(compareB.uploaded_at)}</p>
+                    <img src={compareB.fileUrl} alt="Sonraki" className="w-full rounded-xl border border-slate-200" />
+                    <p className="text-xs text-slate-400 mt-1 text-center">{formatDate(compareB.uploadedAt)}</p>
                   </div>
                 </div>
               )}
@@ -120,14 +120,14 @@ function PhotoViewer({ photos }) {
                       onClick={() => setSelected(ph)}
                       className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 cursor-zoom-in hover:shadow-md transition-all"
                     >
-                      <img src={ph.file_url} alt={ANGLE_LABELS[ph.angle]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={ph.fileUrl} alt={ANGLE_LABELS[ph.angle]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                         <p className="text-white text-[10px] font-medium">{ANGLE_LABELS[ph.angle]}</p>
                       </div>
-                      {!ph.quality_approved && (
+                      {!ph.qualityApproved && (
                         <div className="absolute top-1.5 right-1.5 bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">DÜŞÜK KALİTE</div>
                       )}
                     </div>
@@ -149,7 +149,7 @@ function PhotoViewer({ photos }) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-white font-semibold">{ANGLE_LABELS[selected.angle]}</p>
-                <p className="text-slate-400 text-sm">{formatDateTime(selected.uploaded_at)}</p>
+                <p className="text-slate-400 text-sm">{formatDateTime(selected.uploadedAt)}</p>
               </div>
               <button
                 onClick={() => setSelected(null)}
@@ -158,7 +158,7 @@ function PhotoViewer({ photos }) {
                 <X size={18} />
               </button>
             </div>
-            <img src={selected.file_url} alt="" className="w-full rounded-xl" />
+            <img src={selected.fileUrl} alt="" className="w-full rounded-xl" />
           </div>
         </div>
       )}
@@ -171,7 +171,7 @@ function MedicationSection({ patientId }) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ drug_name: '', dosage: '', frequency: '', duration: '', instructions: '' });
+  const [form, setForm] = useState({ drugName: '', dosage: '', frequency: '', duration: '', instructions: '' });
 
   useEffect(() => {
     apiGetMedications(patientId).then((d) => { setMeds(d); setLoading(false); });
@@ -179,13 +179,13 @@ function MedicationSection({ patientId }) {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!form.drug_name || !form.dosage || !form.frequency || !form.duration) {
+    if (!form.drugName || !form.dosage || !form.frequency || !form.duration) {
       toast.error('Lütfen zorunlu alanları doldurun.'); return;
     }
     setSaving(true);
     const newMed = await apiAddMedication(patientId, form);
     setMeds((prev) => [newMed, ...prev]);
-    setForm({ drug_name: '', dosage: '', frequency: '', duration: '', instructions: '' });
+    setForm({ drugName: '', dosage: '', frequency: '', duration: '', instructions: '' });
     setAdding(false);
     setSaving(false);
     toast.success('İlaç eklendi.');
@@ -214,7 +214,7 @@ function MedicationSection({ patientId }) {
                 <Pill size={16} className="text-blue-700" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900">{m.drug_name}</p>
+                <p className="font-semibold text-slate-900">{m.drugName}</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   <span className="badge badge-blue">{m.dosage}</span>
                   <span className="badge badge-gray">{m.frequency}</span>
@@ -223,7 +223,7 @@ function MedicationSection({ patientId }) {
                 {m.instructions && (
                   <p className="text-xs text-slate-500 mt-2 italic">"{m.instructions}"</p>
                 )}
-                <p className="text-xs text-slate-400 mt-1">{formatDate(m.created_at)}</p>
+                <p className="text-xs text-slate-400 mt-1">{formatDate(m.createdAt)}</p>
               </div>
               <button
                 onClick={() => handleDelete(m.id)}
@@ -243,7 +243,7 @@ function MedicationSection({ patientId }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">İlaç Adı *</label>
-              <input className="input" placeholder="ör. Isotretinoin" value={form.drug_name} onChange={(e) => setForm({ ...form, drug_name: e.target.value })} />
+              <input className="input" placeholder="ör. Isotretinoin" value={form.drugName} onChange={(e) => setForm({ ...form, drugName: e.target.value })} />
             </div>
             <div>
               <label className="label">Doz *</label>
@@ -327,8 +327,8 @@ function NotesSection({ patientId }) {
         <div className="space-y-3">
           {notes.map((n) => (
             <div key={n.id} className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-              <p className="text-sm text-slate-800 leading-relaxed">{n.note_text}</p>
-              <p className="text-xs text-slate-400 mt-2">{formatDateTime(n.created_at)}</p>
+              <p className="text-sm text-slate-800 leading-relaxed">{n.noteText}</p>
+              <p className="text-xs text-slate-400 mt-2">{formatDateTime(n.createdAt)}</p>
             </div>
           ))}
         </div>
@@ -364,11 +364,11 @@ function SideEffectsSection({ patientId }) {
           {effects.map((e) => (
             <div key={e.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
               <div className="flex items-start justify-between gap-2 mb-2">
-                <p className="font-medium text-slate-900 text-sm">{e.drug_name}</p>
+                <p className="font-medium text-slate-900 text-sm">{e.drugName}</p>
                 <span className={severityBadge(e.severity)}>{e.severity}</span>
               </div>
               <p className="text-sm text-slate-700">{e.description}</p>
-              <p className="text-xs text-slate-400 mt-2">{formatDateTime(e.reported_at)}</p>
+              <p className="text-xs text-slate-400 mt-2">{formatDateTime(e.reportedAt)}</p>
             </div>
           ))}
         </div>
@@ -410,7 +410,7 @@ function EmergencySection({ patientId }) {
                   <p className={`text-sm font-medium ${a.resolved ? 'text-slate-600' : 'text-red-800'}`}>
                     {a.message}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">{formatDateTime(a.sent_at)}</p>
+                  <p className="text-xs text-slate-400 mt-1">{formatDateTime(a.sentAt)}</p>
                 </div>
                 {a.resolved ? (
                   <span className="badge badge-green">Çözüldü</span>
@@ -495,8 +495,8 @@ export default function PatientDetailPage() {
           {[
             { label: 'Telefon', value: patient.phone || '-' },
             { label: 'E-posta', value: patient.email || '-' },
-            { label: 'Kayıt Tarihi', value: formatDate(patient.created_at) },
-            { label: 'Son Güncelleme', value: formatDistanceToNow(patient.updated_at) },
+            { label: 'Kayıt Tarihi', value: formatDate(patient.createdAt) },
+            { label: 'Son Güncelleme', value: formatDistanceToNow(patient.updatedAt) },
           ].map(({ label, value }) => (
             <div key={label}>
               <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">{label}</p>

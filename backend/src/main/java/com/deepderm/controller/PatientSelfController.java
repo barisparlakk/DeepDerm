@@ -169,9 +169,10 @@ public class PatientSelfController {
         // Check upload period (only enforced once all photos in a session are uploaded)
         // We allow upload if lastPhotoUploadedAt is null OR period has passed
         if (patient.getLastPhotoUploadedAt() != null) {
-            long daysSinceLast = ChronoUnit.DAYS.between(patient.getLastPhotoUploadedAt(), Instant.now());
+            long daysSinceLast = ChronoUnit.DAYS.between(patient.getLastPhotoUploadedAt().truncatedTo(ChronoUnit.DAYS), Instant.now().truncatedTo(ChronoUnit.DAYS));
             int period = patient.getPhotoUploadPeriodDays() != null ? patient.getPhotoUploadPeriodDays() : 30;
-            if (daysSinceLast < period) {
+            // Eğer yükleme aynı gün içindeyse (seri yüklemedir), ya da periyot dolmuşsa izin ver.
+            if (daysSinceLast > 0 && daysSinceLast < period) {
                 long daysLeft = period - daysSinceLast;
                 return ResponseEntity.badRequest()
                         .body("Fotoğraf yükleme periyodunuz dolmadı. " + daysLeft + " gün sonra tekrar yükleyebilirsiniz.");

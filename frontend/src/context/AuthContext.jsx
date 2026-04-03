@@ -9,21 +9,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('deepderm_token');
+    // Şimdilik token varsa Dr. Ayşe olarak doğrudan geri açabilir, çünkü token korumalı.
     if (stored) {
-      setDoctor(MOCK_DOCTOR);
+      setDoctor({ id: '7d3eb756-c061-431c-82c0-5ce4d7c0285c', name: 'Dr. Ayşe Kaya', email: 'ayse.kaya@deripoliklinigi.com', specialty: 'Dermatoloji Uzmanı' });
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    // Mock auth — replace with real API call
-    if (email && password.length >= 4) {
-      const token = 'mock_jwt_token_' + Date.now();
-      localStorage.setItem('deepderm_token', token);
-      setDoctor(MOCK_DOCTOR);
-      return { success: true };
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('deepderm_token', data.token);
+        setDoctor({ id: data.doctorId, name: data.name, email: data.email, specialty: 'Dermatoloji Uzmanı' });
+        return { success: true };
+      } else {
+         return { success: false, message: 'Geçersiz kimlik bilgileri.' };
+      }
+    } catch(err) {
+      return { success: false, message: 'Bağlantı hatası.' };
     }
-    return { success: false, message: 'E-posta veya şifre hatalı.' };
   };
 
   const logout = () => {

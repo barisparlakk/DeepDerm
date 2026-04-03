@@ -51,7 +51,7 @@ export default function PatientListPage() {
           <h1 className="page-title">Hastalar</h1>
           <p className="page-subtitle">Atanmış tüm hastalarınızı görüntüleyin ve yönetin</p>
         </div>
-        <button className="btn-primary" id="add-patient-btn">
+        <button className="btn-primary" id="add-patient-btn" onClick={() => alert('Hastalar doğrudan mobil uygulama üzerinden e-posta adresinizle size kayıt olmaktadır. Hasta ekleme yönergesini hastanıza iletiniz.')}>
           <UserPlus size={16} />
           Hasta Ekle
         </button>
@@ -160,10 +160,10 @@ export default function PatientListPage() {
                       <span className={statusBadge(p.status)}>{p.status}</span>
                     </td>
                     <td className="table-td hidden md:table-cell text-slate-500">
-                      {formatDate(p.lastPhotoDate)}
+                      {formatDate(p.updatedAt)}
                     </td>
                     <td className="table-td hidden lg:table-cell text-slate-500">
-                      {formatDate(p.created_at)}
+                      {formatDate(p.createdAt)}
                     </td>
                     <td className="table-td">
                       <ChevronRight
