@@ -88,7 +88,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
         <Text style={styles.doneIcon}>✅</Text>
         <Text style={styles.doneTitle}>Fotoğraflar Yüklendi!</Text>
         <Text style={styles.doneDesc}>Doktorunuz en kısa sürede değerlendirecektir.</Text>
-        <Button title="Ana Sayfaya Dön" onPress={() => navigation.navigate('Home')}
+        <Button title="Ana Sayfaya Dön" onPress={() => navigation.goBack()}
           style={{ marginTop: spacing.lg, width: 220 }} />
       </View>
     );

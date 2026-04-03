@@ -157,9 +157,9 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-            <p className="text-xs text-blue-700 font-medium mb-1">Demo Hesap</p>
+            <p className="text-xs text-blue-700 font-medium mb-1">Doktor Hesabı</p>
             <p className="text-xs text-blue-600">E-posta: ayse.kaya@deripoliklinigi.com</p>
-            <p className="text-xs text-blue-600">Şifre: herhangi 4+ karakter</p>
+            <p className="text-xs text-blue-600">Şifre: password123</p>
           </div>
 
           <p className="text-center text-xs text-slate-400 mt-8">
