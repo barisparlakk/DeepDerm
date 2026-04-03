@@ -13,10 +13,12 @@ public class DoctorNote {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Patient patient;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Doctor doctor;
 
     @Column(name = "note_text", nullable = false, columnDefinition = "TEXT")

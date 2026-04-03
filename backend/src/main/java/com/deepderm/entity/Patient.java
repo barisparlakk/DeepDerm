@@ -37,6 +37,7 @@ public class Patient {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Doctor doctor;
 
     @Column(name = "created_at", updatable = false)

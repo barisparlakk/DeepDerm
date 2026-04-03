@@ -13,6 +13,7 @@ public class MedicationConfirm {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Patient patient;
 
     @ManyToOne(fetch = FetchType.LAZY)

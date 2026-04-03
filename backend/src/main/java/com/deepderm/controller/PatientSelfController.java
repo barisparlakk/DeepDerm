@@ -200,6 +200,7 @@ public class PatientSelfController {
         photo.setPatient(patient);
         photo.setAngle(photoAngle);
         photo.setFileUrl(fileUrl);
+        photo.setUploadedAt(Instant.now()); // Eksik olan satır eklendi
         photo.setQualityApproved(false);
         photoRepository.save(photo);
 

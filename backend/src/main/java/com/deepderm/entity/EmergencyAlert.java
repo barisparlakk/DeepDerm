@@ -13,6 +13,7 @@ public class EmergencyAlert {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Patient patient;
 
     @Column(nullable = false, columnDefinition = "TEXT")
