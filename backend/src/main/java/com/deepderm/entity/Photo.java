@@ -34,6 +34,9 @@ public class Photo {
     @Column(name = "quality_approved")
     private Boolean qualityApproved = false;
 
+    @Column(name = "annotated_image_url")
+    private String annotatedImageUrl;
+
     public Photo() {}
 
     public UUID getId() { return id; }
@@ -48,4 +51,6 @@ public class Photo {
     public void setUploadedAt(Instant uploadedAt) { this.uploadedAt = uploadedAt; }
     public Boolean getQualityApproved() { return qualityApproved; }
     public void setQualityApproved(Boolean qualityApproved) { this.qualityApproved = qualityApproved; }
+    public String getAnnotatedImageUrl() { return annotatedImageUrl; }
+    public void setAnnotatedImageUrl(String url) { this.annotatedImageUrl = url; }
 }
