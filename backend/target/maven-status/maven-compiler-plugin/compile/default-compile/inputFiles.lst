@@ -1,12 +1,14 @@
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/DeepDermApplication.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/config/SecurityConfig.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/config/WebMvcConfig.java
+/Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/AiAnalysisController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/AuthController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/NotificationController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/PatientAuthController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/PatientController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/PatientSelfController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/PhotoController.java
+/Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AiAnalysisResponse.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AiLabelRequest.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AuthDto.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/EmergencyAlertRequest.java
@@ -38,3 +40,4 @@
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/repository/SideEffectReportRepository.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/security/JwtAuthenticationFilter.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/security/JwtTokenProvider.java
+/Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/service/AiAnalysisService.java

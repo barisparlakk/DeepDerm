@@ -20,7 +20,7 @@ import java.util.UUID;
  * The doctor web panel fetches analysis results through this endpoint.
  */
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/ai")
 public class AiAnalysisController {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
