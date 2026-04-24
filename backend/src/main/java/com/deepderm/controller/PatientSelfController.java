@@ -6,6 +6,7 @@ import com.deepderm.dto.PatientAuthDto;
 import com.deepderm.dto.SideEffectRequest;
 import com.deepderm.entity.*;
 import com.deepderm.repository.*;
+import com.deepderm.service.AiAnalysisService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,7 @@ public class PatientSelfController {
     private final MedicationConfirmRepository medicationConfirmRepository;
     private final NoteReadRepository noteReadRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AiAnalysisService aiAnalysisService;
 
     @Value("${app.upload-dir:uploads}")
     private String uploadDir;
@@ -53,7 +55,8 @@ public class PatientSelfController {
                                  PhotoRepository photoRepository,
                                  MedicationConfirmRepository medicationConfirmRepository,
                                  NoteReadRepository noteReadRepository,
-                                 PasswordEncoder passwordEncoder) {
+                                 PasswordEncoder passwordEncoder,
+                                 AiAnalysisService aiAnalysisService) {
         this.patientRepository = patientRepository;
         this.medicationRepository = medicationRepository;
         this.sideEffectReportRepository = sideEffectReportRepository;
@@ -63,6 +66,7 @@ public class PatientSelfController {
         this.medicationConfirmRepository = medicationConfirmRepository;
         this.noteReadRepository = noteReadRepository;
         this.passwordEncoder = passwordEncoder;
+        this.aiAnalysisService = aiAnalysisService;
     }
 
     // ─── Profile ─────────────────────────────────────────────────────────────
@@ -193,6 +197,9 @@ public class PatientSelfController {
         String filename = UUID.randomUUID() + "_" + angle + "_" +
                 System.currentTimeMillis() + getExtension(file.getOriginalFilename());
         Path dest = uploadPath.resolve(filename);
+
+        // Read bytes BEFORE transferTo() (stream can only be read once)
+        byte[] imageBytes = file.getBytes();
         file.transferTo(dest);
 
         String fileUrl = "/uploads/photos/" + patient.getId() + "/" + filename;
@@ -208,6 +215,9 @@ public class PatientSelfController {
         // Update lastPhotoUploadedAt
         patient.setLastPhotoUploadedAt(Instant.now());
         patientRepository.save(patient);
+
+        // Trigger async AI analysis — fire-and-forget, never blocks the response
+        aiAnalysisService.analyzeAsync(photo, imageBytes);
 
         return ResponseEntity.ok(photo);
     }
