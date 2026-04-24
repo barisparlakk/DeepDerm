@@ -2,18 +2,6 @@
 detector.py
 ===========
 YOLOv8 inference wrapper for acne lesion detection.
-
-Phase 1 — DEMO MODE
--------------------
-We load the stock yolov8n.pt (COCO-pretrained) because no acne-specific
-weights exist yet.  The COCO class IDs are mapped onto acne labels via
-utils.label_map.coco_class_to_acne_label() for end-to-end pipeline testing.
-
-Phase 2 — Production
---------------------
-Set the MODEL_PATH env var (or DERMAI_MODEL_PATH) to point at the fine-tuned
-.pt file.  id_to_label() will then map class IDs directly (0→Papule, 1→Pustule …)
-using utils.label_map.ID_TO_EN.  No other code changes needed.
 """
 from __future__ import annotations
 
@@ -22,20 +10,20 @@ import logging
 import numpy as np
 from ultralytics import YOLO
 
-from utils.label_map import coco_class_to_acne_label, ID_TO_EN, ID_TO_TR
+from utils.label_map import ID_TO_EN, to_turkish_label
+from models.heuristic_detector import detect_heuristic_lesions
 
 logger = logging.getLogger(__name__)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 DEFAULT_MODEL   = "yolov8n.pt"                      # downloaded automatically
 MODEL_PATH      = os.getenv("DERMAI_MODEL_PATH", DEFAULT_MODEL)
-MODEL_VERSION   = os.getenv("DERMAI_MODEL_VERSION", "yolov8n-v1-demo")
+MODEL_VERSION   = os.getenv("DERMAI_MODEL_VERSION", os.path.splitext(os.path.basename(MODEL_PATH))[0])
 CONFIDENCE_THRESHOLD = float(os.getenv("DERMAI_CONF_THRESHOLD", "0.25"))
 IOU_THRESHOLD        = float(os.getenv("DERMAI_IOU_THRESHOLD",  "0.45"))
+HEURISTIC_FALLBACK   = os.getenv("DERMAI_HEURISTIC_FALLBACK", "true").lower() == "true"
 
-# Fine-tuned mode: set this to True when real acne weights are loaded.
-# When False → COCO class IDs are remapped (demo/testing).
-FINE_TUNED = MODEL_PATH != DEFAULT_MODEL
+HEURISTIC_VERSION = "heuristic-acne-v1"
 
 
 class AcneDetector:
@@ -62,9 +50,42 @@ class AcneDetector:
         if self._loaded:
             return
         logger.info("Loading YOLO model from: %s", MODEL_PATH)
+        if MODEL_PATH == DEFAULT_MODEL:
+            if HEURISTIC_FALLBACK:
+                logger.warning(
+                    "Using default yolov8n.pt (COCO classes). "
+                    "Heuristic acne fallback is enabled. "
+                    "Set DERMAI_MODEL_PATH to acne-trained weights for better lesion detection."
+                )
+            else:
+                logger.warning(
+                    "Using default yolov8n.pt (COCO classes). "
+                    "Set DERMAI_MODEL_PATH to acne-trained weights for clinical lesion detection."
+                )
         self._model = YOLO(MODEL_PATH)
+        self._model_names = getattr(self._model, "names", {})
         self._loaded = True
-        logger.info("Model '%s' loaded (fine_tuned=%s)", MODEL_VERSION, FINE_TUNED)
+        logger.info("Model '%s' loaded from '%s'", MODEL_VERSION, MODEL_PATH)
+
+    def _use_heuristic_fallback(self) -> bool:
+        """Use image-based fallback when acne-specific weights are unavailable."""
+        return MODEL_PATH == DEFAULT_MODEL and HEURISTIC_FALLBACK
+
+    def _resolve_label_en(self, class_id: int) -> str:
+        """Resolve class_id to model-native label text."""
+        names = getattr(self, "_model_names", {})
+
+        label: str | None = None
+        if isinstance(names, dict):
+            raw = names.get(class_id)
+            if raw is not None:
+                label = str(raw).strip()
+        elif isinstance(names, (list, tuple)) and 0 <= class_id < len(names):
+            label = str(names[class_id]).strip()
+
+        if label:
+            return label
+        return ID_TO_EN.get(class_id, f"class_{class_id}")
 
     # ── Inference ─────────────────────────────────────────────────────────────
 
@@ -84,6 +105,9 @@ class AcneDetector:
         """
         if not self._loaded:
             self.load()
+
+        if self._use_heuristic_fallback():
+            return detect_heuristic_lesions(image_np=image_np, conf_threshold=CONFIDENCE_THRESHOLD)
 
         # Ultralytics accepts numpy arrays natively (RGB uint8 or float)
         results = self._model.predict(
@@ -105,11 +129,8 @@ class AcneDetector:
                 x1, y1, x2, y2 = (int(v) for v in box.xyxy[0].tolist())
                 bbox = {"x": x1, "y": y1, "w": x2 - x1, "h": y2 - y1}
 
-                if FINE_TUNED:
-                    label_en = ID_TO_EN.get(coco_class_id, "Unknown")
-                    label_tr = ID_TO_TR.get(coco_class_id, "Bilinmeyen")
-                else:
-                    label_en, label_tr = coco_class_to_acne_label(coco_class_id)
+                label_en = self._resolve_label_en(coco_class_id)
+                label_tr = to_turkish_label(label_en)
 
                 detections.append({
                     "label":      label_tr,
@@ -119,45 +140,14 @@ class AcneDetector:
                     "bbox":       bbox,
                 })
 
-        # --- DEMO MOCK ANNOTATIONS ---
-        # If we are in DEMO mode and no objects (like a person) were confidently found,
-        # let's generate 3-5 realistic looking fake lesions so the doctor panel UI can be tested!
-        if not FINE_TUNED and len(detections) == 0:
-            import random
-            num_mock_lesions = random.randint(2, 5)
-            h, w = image_np.shape[:2]
-            
-            for _ in range(num_mock_lesions):
-                # Randomize class
-                fake_class_id = random.randint(0, len(ID_TO_EN) - 1)
-                label_en = ID_TO_EN[fake_class_id]
-                label_tr = ID_TO_TR[fake_class_id]
-                
-                # Randomize box near center of image
-                cx = random.randint(int(w * 0.25), int(w * 0.75))
-                cy = random.randint(int(h * 0.25), int(h * 0.75))
-                bw = random.randint(30, 80)
-                bh = random.randint(30, 80)
-                
-                bbox = {
-                    "x": max(0, cx - bw//2),
-                    "y": max(0, cy - bh//2),
-                    "w": bw,
-                    "h": bh
-                }
-                
-                detections.append({
-                    "label": label_tr,
-                    "label_en": label_en,
-                    "confidence": round(random.uniform(0.65, 0.95), 2),
-                    "class_id": fake_class_id,
-                    "bbox": bbox,
-                })
+        detections.sort(key=lambda d: d["confidence"], reverse=True)
 
         return detections
 
     @property
     def version(self) -> str:
+        if self._use_heuristic_fallback():
+            return f"{MODEL_VERSION}+{HEURISTIC_VERSION}"
         return MODEL_VERSION
 
 
