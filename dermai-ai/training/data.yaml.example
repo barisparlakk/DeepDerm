@@ -1,0 +1,22 @@
+# Copy this file to data.yaml and update `path` to your prepared YOLO dataset.
+#
+# Expected layout:
+# datasets/deepderm_acne/
+#   images/train
+#   images/val
+#   images/test
+#   labels/train
+#   labels/val
+#   labels/test
+
+path: datasets/deepderm_acne
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: papule
+  1: pustule
+  2: nodule
+  3: comedone
+
