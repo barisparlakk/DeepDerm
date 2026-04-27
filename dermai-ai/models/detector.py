@@ -24,6 +24,10 @@ IOU_THRESHOLD        = float(os.getenv("DERMAI_IOU_THRESHOLD",  "0.45"))
 HEURISTIC_FALLBACK   = os.getenv("DERMAI_HEURISTIC_FALLBACK", "true").lower() == "true"
 
 HEURISTIC_VERSION = "heuristic-acne-v1"
+COCO_DEFAULT_MODELS = {
+    "yolov8n.pt",
+    "yolo11n.pt",
+}
 
 
 class AcneDetector:
@@ -50,26 +54,32 @@ class AcneDetector:
         if self._loaded:
             return
         logger.info("Loading YOLO model from: %s", MODEL_PATH)
-        if MODEL_PATH == DEFAULT_MODEL:
+        if self._is_coco_default_model():
             if HEURISTIC_FALLBACK:
                 logger.warning(
-                    "Using default yolo11n.pt (COCO classes). "
+                    "Using default %s (COCO classes). "
                     "Heuristic acne fallback is enabled. "
-                    "Set DERMAI_MODEL_PATH to acne-trained weights for better lesion detection."
+                    "Set DERMAI_MODEL_PATH to acne-trained weights for better lesion detection.",
+                    os.path.basename(MODEL_PATH),
                 )
             else:
                 logger.warning(
-                    "Using default yolo11n.pt (COCO classes). "
-                    "Set DERMAI_MODEL_PATH to acne-trained weights for clinical lesion detection."
+                    "Using default %s (COCO classes). "
+                    "Set DERMAI_MODEL_PATH to acne-trained weights for clinical lesion detection.",
+                    os.path.basename(MODEL_PATH),
                 )
         self._model = YOLO(MODEL_PATH)
         self._model_names = getattr(self._model, "names", {})
         self._loaded = True
         logger.info("Model '%s' loaded from '%s'", MODEL_VERSION, MODEL_PATH)
 
+    def _is_coco_default_model(self) -> bool:
+        """Return true when the configured weights are generic COCO weights."""
+        return os.path.basename(MODEL_PATH) in COCO_DEFAULT_MODELS
+
     def _use_heuristic_fallback(self) -> bool:
         """Use image-based fallback when acne-specific weights are unavailable."""
-        return MODEL_PATH == DEFAULT_MODEL and HEURISTIC_FALLBACK
+        return self._is_coco_default_model() and HEURISTIC_FALLBACK
 
     def _resolve_label_en(self, class_id: int) -> str:
         """Resolve class_id to model-native label text."""
