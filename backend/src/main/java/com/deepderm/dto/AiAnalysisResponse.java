@@ -19,8 +19,23 @@ public class AiAnalysisResponse {
 
     private List<Detection> detections;
 
+    private Map<String, Object> counts;
+
+    private Map<String, Object> severity;
+
+    private Map<String, Object> quality;
+
     @JsonProperty("total_lesion_count")
     private int totalLesionCount;
+
+    @JsonProperty("inflammatory_total")
+    private int inflammatoryTotal;
+
+    @JsonProperty("weighted_score")
+    private double weightedScore;
+
+    @JsonProperty("clinical_summary")
+    private String clinicalSummary;
 
     @JsonProperty("annotated_image_url")
     private String annotatedImageUrl;
@@ -63,8 +78,20 @@ public class AiAnalysisResponse {
     public void            setPatientId(String patientId)       { this.patientId = patientId; }
     public List<Detection> getDetections()                      { return detections; }
     public void            setDetections(List<Detection> d)     { this.detections = d; }
+    public Map<String, Object> getCounts()                      { return counts; }
+    public void            setCounts(Map<String, Object> counts) { this.counts = counts; }
+    public Map<String, Object> getSeverity()                    { return severity; }
+    public void            setSeverity(Map<String, Object> severity) { this.severity = severity; }
+    public Map<String, Object> getQuality()                     { return quality; }
+    public void            setQuality(Map<String, Object> quality) { this.quality = quality; }
     public int             getTotalLesionCount()                { return totalLesionCount; }
     public void            setTotalLesionCount(int c)           { this.totalLesionCount = c; }
+    public int             getInflammatoryTotal()               { return inflammatoryTotal; }
+    public void            setInflammatoryTotal(int c)          { this.inflammatoryTotal = c; }
+    public double          getWeightedScore()                   { return weightedScore; }
+    public void            setWeightedScore(double weightedScore) { this.weightedScore = weightedScore; }
+    public String          getClinicalSummary()                 { return clinicalSummary; }
+    public void            setClinicalSummary(String clinicalSummary) { this.clinicalSummary = clinicalSummary; }
     public String          getAnnotatedImageUrl()               { return annotatedImageUrl; }
     public void            setAnnotatedImageUrl(String url)     { this.annotatedImageUrl = url; }
     public String          getModelVersion()                    { return modelVersion; }

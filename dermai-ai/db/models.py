@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,8 +30,14 @@ class AiAnalizSonuclari(Base):
     patient_id          UUID FK → patient.id
     detections          JSONB   — list of detection objects
     total_lesion_count  INTEGER
+    counts              JSONB
+    severity            JSONB
+    quality             JSONB
+    inflammatory_total  INTEGER
+    weighted_score      FLOAT
+    clinical_summary    TEXT
     annotated_image_url TEXT    — relative URL served by FastAPI static files
-    model_version       TEXT    — e.g. "yolov8n-v1-demo"
+    model_version       TEXT    — e.g. "acne-yolo11s-v1"
     analyzed_at         TIMESTAMPTZ
     """
     __tablename__ = "ai_analiz_sonuclari"
@@ -64,6 +70,40 @@ class AiAnalizSonuclari(Base):
         Integer,
         nullable=False,
         default=0,
+    )
+
+    counts: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+    )
+
+    severity: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+    )
+
+    quality: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+
+    inflammatory_total: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    weighted_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.0,
+    )
+
+    clinical_summary: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
     annotated_image_url: Mapped[str | None] = mapped_column(

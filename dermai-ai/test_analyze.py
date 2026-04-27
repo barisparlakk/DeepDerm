@@ -103,6 +103,8 @@ def main() -> None:
     print(f"  ANALYSIS RESULT")
     print(f"{'='*60}")
     print(f"  Total lesions    : {result['total_lesion_count']}")
+    print(f"  Severity         : {result.get('severity', {}).get('label_tr', 'N/A')}")
+    print(f"  Clinical summary : {result.get('clinical_summary', 'N/A')}")
     print(f"  Model version    : {result.get('model_version', 'N/A')}")
     print(f"  Annotated image  : {result['annotated_image_url']}")
     print(f"  Analyzed at      : {result['analyzed_at']}")

@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title       = "DermAI — Acne Detection Microservice",
     description = (
-        "FastAPI service that runs YOLOv8 acne lesion detection on face photos "
+        "FastAPI service that runs YOLO11 acne lesion detection on face photos "
         "uploaded through the DeepDerm patient app. Called by the Spring Boot backend."
     ),
     version     = "1.0.0",

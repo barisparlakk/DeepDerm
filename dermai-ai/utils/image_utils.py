@@ -21,7 +21,7 @@ _CLASS_COLORS: list[tuple[int, int, int]] = [
     (160, 160, 160),  # Scar          — grey
 ]
 
-TARGET_SIZE = 640  # YOLOv8 default input size
+TARGET_SIZE = 640  # YOLO default input size
 
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:

@@ -44,9 +44,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy application code
 COPY . .
 
-# Pre-download yolov8n.pt so it's baked into the image
+# Pre-download yolo11n.pt so it's baked into the image
 # (avoids network fetch on first inference in production)
-RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+RUN python -c "from ultralytics import YOLO; YOLO('yolo11n.pt')"
 
 # Create storage directory
 RUN mkdir -p storage/annotated
@@ -56,8 +56,8 @@ EXPOSE 8000
 
 # ── Environment defaults (override via docker-compose / k8s env) ──────────────
 ENV DEEPDERM_DB_URL="postgresql+asyncpg://postgres:postgres@db:5432/deepderm" \
-    DERMAI_MODEL_PATH="yolov8n.pt" \
-    DERMAI_MODEL_VERSION="yolov8n-v1-demo" \
+    DERMAI_MODEL_PATH="yolo11n.pt" \
+    DERMAI_MODEL_VERSION="yolo11n-prototype" \
     DERMAI_CONF_THRESHOLD="0.25" \
     CORS_ORIGINS="http://localhost:8080,http://localhost:5173" \
     STORAGE_DIR="storage/annotated"

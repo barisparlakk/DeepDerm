@@ -1,7 +1,7 @@
 """
 detector.py
 ===========
-YOLOv8 inference wrapper for acne lesion detection.
+YOLO11 inference wrapper for acne lesion detection.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from models.heuristic_detector import detect_heuristic_lesions
 logger = logging.getLogger(__name__)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-DEFAULT_MODEL   = "yolov8n.pt"                      # downloaded automatically
+DEFAULT_MODEL   = "yolo11n.pt"                      # downloaded automatically
 MODEL_PATH      = os.getenv("DERMAI_MODEL_PATH", DEFAULT_MODEL)
 MODEL_VERSION   = os.getenv("DERMAI_MODEL_VERSION", os.path.splitext(os.path.basename(MODEL_PATH))[0])
 CONFIDENCE_THRESHOLD = float(os.getenv("DERMAI_CONF_THRESHOLD", "0.25"))
@@ -53,13 +53,13 @@ class AcneDetector:
         if MODEL_PATH == DEFAULT_MODEL:
             if HEURISTIC_FALLBACK:
                 logger.warning(
-                    "Using default yolov8n.pt (COCO classes). "
+                    "Using default yolo11n.pt (COCO classes). "
                     "Heuristic acne fallback is enabled. "
                     "Set DERMAI_MODEL_PATH to acne-trained weights for better lesion detection."
                 )
             else:
                 logger.warning(
-                    "Using default yolov8n.pt (COCO classes). "
+                    "Using default yolo11n.pt (COCO classes). "
                     "Set DERMAI_MODEL_PATH to acne-trained weights for clinical lesion detection."
                 )
         self._model = YOLO(MODEL_PATH)
