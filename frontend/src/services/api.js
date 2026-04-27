@@ -46,3 +46,25 @@ export const apiMarkAllRead = async () => { return { success: true }; };
 export const apiAddAiLabel = async (photoId, label, parametricValues) => {
    return { success: true };
 };
+
+// ─── AI Analysis Results ──────────────────────────────────────────────────────
+// Fetches the DermAI detection result for a given photo.
+// Returns null (not throws) when no analysis exists yet.
+export const apiGetAiResults = async (photoId) => {
+  try {
+    return (await axios.get(`/api/ai/results/${photoId}`)).data;
+  } catch (err) {
+    if (err?.response?.status === 404) return null;
+    throw err;
+  }
+};
+
+export const apiGetAiTimeline = async (patientId) => {
+  return (await axios.get(`/api/ai/results/patient/${patientId}/timeline`)).data;
+};
+
+export const apiCompareAiResults = async (previousPhotoId, currentPhotoId) => {
+  return (await axios.get('/api/ai/compare', {
+    params: { previousPhotoId, currentPhotoId },
+  })).data;
+};

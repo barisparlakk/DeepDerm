@@ -4,17 +4,245 @@ import Layout from '../components/Layout';
 import {
   apiGetPatient, apiGetPhotos, apiGetMedications, apiAddMedication,
   apiDeleteMedication, apiGetSideEffects, apiGetEmergencyAlerts,
-  apiResolveAlert, apiGetNotes, apiAddNote,
+  apiResolveAlert, apiGetNotes, apiAddNote, apiGetAiResults,
 } from '../services/api';
 import { formatDate, formatDateTime, formatDistanceToNow, groupByDate } from '../utils/dateUtils';
 import {
   ArrowLeft, User, ImageIcon, Pill, AlertTriangle, FileText,
   Plus, X, ZoomIn, ChevronDown, ChevronUp, CheckCircle2,
-  Loader2, Camera, StickyNote, Trash2, ArrowLeftRight, Tag
+  Loader2, Camera, StickyNote, Trash2, ArrowLeftRight, Tag,
+  ScanLine, Activity, Clock, Cpu,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ANGLE_LABELS = { front: 'Ön Görünüm', right: 'Sağ Yanak', left: 'Sol Yanak' };
+const COUNT_LABELS = [
+  ['papule', 'Papül'],
+  ['pustule', 'Püstül'],
+  ['nodule', 'Nodül'],
+  ['comedone', 'Komedon'],
+];
+
+// Confidence → colour
+const confColor = (c) => {
+  if (c >= 0.8) return { bar: '#22c55e', badge: '#dcfce7', text: '#15803d' };
+  if (c >= 0.5) return { bar: '#f59e0b', badge: '#fef3c7', text: '#b45309' };
+  return           { bar: '#ef4444', badge: '#fee2e2', text: '#b91c1c' };
+};
+
+const severityClass = (score = 0) => {
+  if (score >= 4) return 'bg-red-100 text-red-700 border-red-200';
+  if (score === 3) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (score === 2) return 'bg-amber-100 text-amber-700 border-amber-200';
+  if (score === 1) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  return 'bg-slate-100 text-slate-600 border-slate-200';
+};
+
+// ─── AiAnalysisSection ─────────────────────────────────────────────────────
+
+function AiPhotoCard({ photo }) {
+  const [result, setResult] = useState(undefined); // undefined=loading, null=none
+  const [open,   setOpen]   = useState(false);
+
+  useEffect(() => {
+    if (!open || result !== undefined) return;
+    apiGetAiResults(photo.id)
+      .then(setResult)
+      .catch(() => setResult(null));
+  }, [open, photo.id]);
+
+  const hasAnnotated = result?.annotated_image_url;
+
+  return (
+    <div className="border border-slate-200 rounded-xl overflow-hidden">
+      {/* Header row */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+      >
+        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0">
+          <img src={photo.fileUrl} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-slate-900 truncate">
+            {ANGLE_LABELS[photo.angle] || photo.angle}
+          </p>
+          <p className="text-xs text-slate-400">{new Date(photo.uploadedAt).toLocaleString('tr-TR')}</p>
+        </div>
+        {result === undefined && open && (
+          <Loader2 size={15} className="text-violet-500 animate-spin flex-shrink-0" />
+        )}
+        {result !== null && result !== undefined && (
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 flex-shrink-0">
+            {result.total_lesion_count} lezyon
+          </span>
+        )}
+        {result === null && open && (
+          <span className="text-[11px] text-slate-400 flex-shrink-0">Analiz yok</span>
+        )}
+        {open ? <ChevronUp size={14} className="text-slate-400 flex-shrink-0" /> : <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />}
+      </button>
+
+      {open && (
+        <div className="p-4">
+          {result === undefined && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={22} className="text-violet-400 animate-spin" />
+            </div>
+          )}
+
+          {result === null && (
+            <div className="flex flex-col items-center py-8 text-slate-400">
+              <ScanLine size={28} className="mb-2 text-slate-300" />
+              <p className="text-sm">Bu fotoğraf için henüz AI analizi yapılmadı</p>
+              <p className="text-xs text-slate-400 mt-1">Yeni fotoğraf yüklenince otomatik başlar</p>
+            </div>
+          )}
+
+          {result && (
+            <div className="space-y-4">
+              {/* Annotated image */}
+              {hasAnnotated && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Annotate Edilmiş Görüntü</p>
+                  <img
+                    src={`http://localhost:8000${result.annotated_image_url}`}
+                    alt="Annotated"
+                    className="w-full rounded-xl border border-slate-200 shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-violet-50 rounded-xl p-3 border border-violet-100 text-center">
+                  <p className="text-2xl font-bold text-violet-700">{result.total_lesion_count}</p>
+                  <p className="text-xs text-violet-500 mt-0.5">Toplam Lezyon</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-center col-span-2 flex flex-col justify-center">
+                  <div className="flex items-center gap-1.5 justify-center mb-1">
+                    <Cpu size={13} className="text-slate-400" />
+                    <p className="text-xs font-medium text-slate-700">{result.model_version || 'N/A'}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 justify-center">
+                    <Clock size={12} className="text-slate-400" />
+                    <p className="text-xs text-slate-500">
+                      {result.analyzed_at
+                        ? new Date(result.analyzed_at).toLocaleString('tr-TR')
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinical interpretation */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Klinik Değerlendirme</p>
+                    <p className="text-sm text-slate-600 mt-1">{result.clinical_summary || 'Klinik özet hazırlanıyor.'}</p>
+                  </div>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border whitespace-nowrap ${severityClass(result.severity?.score)}`}>
+                    {result.severity?.label_tr || 'N/A'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {COUNT_LABELS.map(([key, label]) => (
+                    <div key={key} className="rounded-lg bg-slate-50 border border-slate-100 p-2 text-center">
+                      <p className="text-lg font-bold text-slate-900">{result.counts?.[key] ?? 0}</p>
+                      <p className="text-[11px] text-slate-500">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                {result.quality && !result.quality.quality_passed && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    Görüntü kalitesi sınırlı: {(result.quality.flags || []).join(', ') || 'kontrol gerekli'}
+                  </div>
+                )}
+              </div>
+
+              {/* Detections list */}
+              {result.detections?.length > 0 ? (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Tespit Edilen Bulgular</p>
+                  <div className="space-y-2">
+                    {result.detections.map((d, i) => {
+                      const col = confColor(d.confidence);
+                      return (
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
+                          {/* Label + confidence */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: col.badge, color: col.text }}
+                              >
+                                {d.label}
+                              </span>
+                              <span className="text-xs text-slate-400">{d.label_en}</span>
+                            </div>
+                            {/* Confidence bar */}
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${(d.confidence * 100).toFixed(0)}%`, background: col.bar }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-slate-600 w-10 text-right">
+                                {(d.confidence * 100).toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                          {/* BBox info */}
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-[10px] text-slate-400">
+                              {d.bbox.w}×{d.bbox.h}px
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              ({d.bbox.x}, {d.bbox.y})
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-slate-400">
+                  <Activity size={20} className="mx-auto mb-1 text-slate-300" />
+                  <p className="text-sm">Tespit edilen lezyon yok</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AiAnalysisSection({ photos }) {
+  if (!photos || photos.length === 0) {
+    return (
+      <div className="p-5 flex flex-col items-center py-10 text-slate-400">
+        <ScanLine size={28} className="mb-2 text-slate-300" />
+        <p className="text-sm">Fotoğraf yüklenince analiz başlar</p>
+      </div>
+    );
+  }
+  return (
+    <div className="p-5 space-y-3">
+      <p className="text-xs text-slate-500 bg-violet-50 px-3 py-2 rounded-lg border border-violet-100">
+        Her fotoğraf yüklendiğinde YOLO11 tabanlı analiz otomatik çalışır; lezyon
+        sayımı, Hayashi şiddeti ve görüntü kalitesi birlikte raporlanır.
+      </p>
+      {photos.map((ph) => (
+        <AiPhotoCard key={ph.id} photo={ph} />
+      ))}
+    </div>
+  );
+}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -437,7 +665,7 @@ export default function PatientDetailPage() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState({
-    photos: true, meds: true, notes: true, sideEffects: true, alerts: true,
+    photos: true, aiAnalysis: false, meds: true, notes: true, sideEffects: true, alerts: true,
   });
 
   useEffect(() => {
@@ -518,6 +746,18 @@ export default function PatientDetailPage() {
             onToggle={() => toggle('photos')}
           />
           {openSections.photos && <PhotoViewer photos={photos} />}
+        </div>
+
+        {/* AI Analysis */}
+        <div className="card overflow-hidden">
+          <SectionHeader
+            icon={ScanLine}
+            title="AI Analiz Sonuçları"
+            count={photos.length}
+            open={openSections.aiAnalysis}
+            onToggle={() => toggle('aiAnalysis')}
+          />
+          {openSections.aiAnalysis && <AiAnalysisSection photos={photos} />}
         </div>
 
         {/* Medications */}
