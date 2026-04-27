@@ -16,12 +16,26 @@ import {
 import toast from 'react-hot-toast';
 
 const ANGLE_LABELS = { front: 'Ön Görünüm', right: 'Sağ Yanak', left: 'Sol Yanak' };
+const COUNT_LABELS = [
+  ['papule', 'Papül'],
+  ['pustule', 'Püstül'],
+  ['nodule', 'Nodül'],
+  ['comedone', 'Komedon'],
+];
 
 // Confidence → colour
 const confColor = (c) => {
   if (c >= 0.8) return { bar: '#22c55e', badge: '#dcfce7', text: '#15803d' };
   if (c >= 0.5) return { bar: '#f59e0b', badge: '#fef3c7', text: '#b45309' };
   return           { bar: '#ef4444', badge: '#fee2e2', text: '#b91c1c' };
+};
+
+const severityClass = (score = 0) => {
+  if (score >= 4) return 'bg-red-100 text-red-700 border-red-200';
+  if (score === 3) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (score === 2) return 'bg-amber-100 text-amber-700 border-amber-200';
+  if (score === 1) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  return 'bg-slate-100 text-slate-600 border-slate-200';
 };
 
 // ─── AiAnalysisSection ─────────────────────────────────────────────────────
@@ -121,6 +135,32 @@ function AiPhotoCard({ photo }) {
                 </div>
               </div>
 
+              {/* Clinical interpretation */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Klinik Değerlendirme</p>
+                    <p className="text-sm text-slate-600 mt-1">{result.clinical_summary || 'Klinik özet hazırlanıyor.'}</p>
+                  </div>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border whitespace-nowrap ${severityClass(result.severity?.score)}`}>
+                    {result.severity?.label_tr || 'N/A'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {COUNT_LABELS.map(([key, label]) => (
+                    <div key={key} className="rounded-lg bg-slate-50 border border-slate-100 p-2 text-center">
+                      <p className="text-lg font-bold text-slate-900">{result.counts?.[key] ?? 0}</p>
+                      <p className="text-[11px] text-slate-500">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                {result.quality && !result.quality.quality_passed && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    Görüntü kalitesi sınırlı: {(result.quality.flags || []).join(', ') || 'kontrol gerekli'}
+                  </div>
+                )}
+              </div>
+
               {/* Detections list */}
               {result.detections?.length > 0 ? (
                 <div>
@@ -194,8 +234,8 @@ function AiAnalysisSection({ photos }) {
   return (
     <div className="p-5 space-y-3">
       <p className="text-xs text-slate-500 bg-violet-50 px-3 py-2 rounded-lg border border-violet-100">
-        Her fotoğraf yüklendiğinde YOLOv8 modeli otomatik çalışır ve lezyonları
-        işaretler. Sonuçları görmek için fotoğrafa tıklayın.
+        Her fotoğraf yüklendiğinde YOLO11 tabanlı analiz otomatik çalışır; lezyon
+        sayımı, Hayashi şiddeti ve görüntü kalitesi birlikte raporlanır.
       </p>
       {photos.map((ph) => (
         <AiPhotoCard key={ph.id} photo={ph} />

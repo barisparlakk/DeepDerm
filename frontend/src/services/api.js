@@ -58,3 +58,13 @@ export const apiGetAiResults = async (photoId) => {
     throw err;
   }
 };
+
+export const apiGetAiTimeline = async (patientId) => {
+  return (await axios.get(`/api/ai/results/patient/${patientId}/timeline`)).data;
+};
+
+export const apiCompareAiResults = async (previousPhotoId, currentPhotoId) => {
+  return (await axios.get('/api/ai/compare', {
+    params: { previousPhotoId, currentPhotoId },
+  })).data;
+};
