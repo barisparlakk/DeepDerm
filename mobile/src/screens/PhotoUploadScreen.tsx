@@ -4,7 +4,7 @@ import {
   ActivityIndicator, StatusBar, ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
-import { uploadPhoto } from '../api/patient';
+import { uploadPhoto, checkPhotoAngle } from '../api/patient';
 import { Button } from '../components/Button';
 import { colors, spacing, radius } from '../utils/theme';
 
@@ -22,6 +22,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
   const [currentStep, setCurrentStep] = useState(0);
   const [captured, setCaptured] = useState<{ [k in Angle]?: string }>({});
   const [uploading, setUploading] = useState(false);
+  const [checkingAngle, setCheckingAngle] = useState(false);
   const [done, setDone] = useState(false);
 
   const angle = ANGLES[currentStep];
@@ -46,14 +47,29 @@ export default function PhotoUploadScreen({ navigation }: any) {
   const takePicture = async () => {
     if (!cameraRef.current) return;
     try {
+      setCheckingAngle(true);
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, skipProcessing: false });
-      if (!photo) return;
+      if (!photo) {
+        setCheckingAngle(false);
+        return;
+      }
+      
+      // Check angle on backend
+      const result = await checkPhotoAngle(photo.uri, angle.key);
+      setCheckingAngle(false);
+      
+      if (!result.valid) {
+        Alert.alert('Hatalı Açı', result.message || 'Lütfen açıyı düzeltip tekrar çekin.');
+        return;
+      }
+
       setCaptured(prev => ({ ...prev, [angle.key]: photo.uri }));
       if (currentStep < ANGLES.length - 1) {
         setTimeout(() => setCurrentStep(s => s + 1), 300);
       }
-    } catch {
-      Alert.alert('Hata', 'Fotoğraf çekilemedi. Lütfen tekrar deneyin.');
+    } catch (err: any) {
+      setCheckingAngle(false);
+      Alert.alert('Hata', 'Fotoğraf çekilemedi veya açı doğrulanamadı. Lütfen tekrar deneyin.');
     }
   };
 
@@ -159,8 +175,12 @@ export default function PhotoUploadScreen({ navigation }: any) {
       {/* Controls */}
       <View style={styles.controls}>
         {!isCaptured ? (
-          <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
-            <View style={styles.captureBtnInner} />
+          <TouchableOpacity style={styles.captureBtn} onPress={takePicture} disabled={checkingAngle}>
+            {checkingAngle ? (
+              <ActivityIndicator color="#fff" size="large" />
+            ) : (
+              <View style={styles.captureBtnInner} />
+            )}
           </TouchableOpacity>
         ) : (
           <View style={styles.capturedControls}>

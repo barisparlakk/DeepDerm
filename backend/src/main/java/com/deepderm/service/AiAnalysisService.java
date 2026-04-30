@@ -1,6 +1,7 @@
 package com.deepderm.service;
 
 import com.deepderm.dto.AiAnalysisResponse;
+import com.deepderm.dto.AngleCheckResponse;
 import com.deepderm.entity.Photo;
 import com.deepderm.repository.PhotoRepository;
 import org.slf4j.Logger;
@@ -41,6 +42,8 @@ public class AiAnalysisService {
     private static final Duration TIMEOUT      = Duration.ofSeconds(60);
     private static final String   HEALTH_PATH  = "/health";
     private static final String   ANALYZE_PATH = "/analyze";
+    private static final String   CHECK_ANGLE_PATH = "/quality/check-angle";
+    private static final String   MASK_EYES_PATH = "/quality/mask-eyes";
 
     private final WebClient       webClient;
     private final PhotoRepository photoRepository;
@@ -109,6 +112,58 @@ public class AiAnalysisService {
         } catch (Exception e) {
             log.warn("AI module health check failed: {}", e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Synchronously checks if the angle is correct.
+     */
+    public AngleCheckResponse checkAngle(byte[] imageBytes, String targetAngle) {
+        try {
+            MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+            bodyBuilder.part("target_angle", targetAngle);
+            bodyBuilder.part("file", new ByteArrayResource(imageBytes) {
+                @Override public String getFilename() { return "photo.jpg"; }
+            }).contentType(MediaType.IMAGE_JPEG);
+
+            return webClient.post()
+                    .uri(CHECK_ANGLE_PATH)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                    .retrieve()
+                    .bodyToMono(AngleCheckResponse.class)
+                    .timeout(Duration.ofSeconds(10))
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to check angle: {}", e.getMessage());
+            // If the AI service is down or fails, default to true to not block the patient
+            return new AngleCheckResponse(true, "unknown", "Analiz servisine ulaşılamadı. Devam ediliyor.");
+        }
+    }
+
+    /**
+     * Synchronously masks eyes for privacy. Returns the masked image bytes or the original image bytes on failure.
+     */
+    public byte[] maskEyes(byte[] imageBytes) {
+        try {
+            MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+            bodyBuilder.part("file", new ByteArrayResource(imageBytes) {
+                @Override public String getFilename() { return "photo.jpg"; }
+            }).contentType(MediaType.IMAGE_JPEG);
+
+            byte[] maskedBytes = webClient.post()
+                    .uri(MASK_EYES_PATH)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+            
+            return maskedBytes != null ? maskedBytes : imageBytes;
+        } catch (Exception e) {
+            log.error("Failed to mask eyes: {}", e.getMessage());
+            return imageBytes; // fallback to original
         }
     }
 

@@ -25,6 +25,7 @@ from fastapi.staticfiles import StaticFiles
 
 from models.detector import detector
 from routers.analyze import router as analyze_router
+from routers.quality import router as quality_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -83,6 +84,7 @@ app.mount(
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(analyze_router, tags=["Analysis"])
+app.include_router(quality_router, tags=["Quality"])
 
 
 # ── Health endpoint ───────────────────────────────────────────────────────────
