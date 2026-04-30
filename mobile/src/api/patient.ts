@@ -62,6 +62,19 @@ export const uploadPhoto = async (fileUri: string, angle: 'front' | 'right' | 'l
   return data;
 };
 
+export const checkPhotoAngle = async (fileUri: string, angle: 'front' | 'right' | 'left') => {
+  const formData = new FormData();
+  const filename = fileUri.split('/').pop() || 'photo.jpg';
+  const type = filename.endsWith('.png') ? 'image/png' : 'image/jpeg';
+  // @ts-ignore
+  formData.append('file', { uri: fileUri, name: filename, type });
+  formData.append('angle', angle);
+  const { data } = await client.post('/patients/me/photos/check-angle', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+};
+
 // ─── Side Effects ─────────────────────────────────────────────────────────────
 export const getSideEffects = async () => {
   const { data } = await client.get('/patients/me/side-effects');

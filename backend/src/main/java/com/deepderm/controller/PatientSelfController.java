@@ -1,5 +1,6 @@
 package com.deepderm.controller;
 
+import com.deepderm.dto.AngleCheckResponse;
 import com.deepderm.dto.EmergencyAlertRequest;
 import com.deepderm.dto.MedicationConfirmRequest;
 import com.deepderm.dto.PatientAuthDto;
@@ -48,15 +49,15 @@ public class PatientSelfController {
     private String uploadDir;
 
     public PatientSelfController(PatientRepository patientRepository,
-                                 MedicationRepository medicationRepository,
-                                 SideEffectReportRepository sideEffectReportRepository,
-                                 EmergencyAlertRepository emergencyAlertRepository,
-                                 DoctorNoteRepository doctorNoteRepository,
-                                 PhotoRepository photoRepository,
-                                 MedicationConfirmRepository medicationConfirmRepository,
-                                 NoteReadRepository noteReadRepository,
-                                 PasswordEncoder passwordEncoder,
-                                 AiAnalysisService aiAnalysisService) {
+            MedicationRepository medicationRepository,
+            SideEffectReportRepository sideEffectReportRepository,
+            EmergencyAlertRepository emergencyAlertRepository,
+            DoctorNoteRepository doctorNoteRepository,
+            PhotoRepository photoRepository,
+            MedicationConfirmRepository medicationConfirmRepository,
+            NoteReadRepository noteReadRepository,
+            PasswordEncoder passwordEncoder,
+            AiAnalysisService aiAnalysisService) {
         this.patientRepository = patientRepository;
         this.medicationRepository = medicationRepository;
         this.sideEffectReportRepository = sideEffectReportRepository;
@@ -78,7 +79,7 @@ public class PatientSelfController {
 
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(@AuthenticationPrincipal Patient patient,
-                                            @Valid @RequestBody PatientAuthDto.ChangePasswordRequest req) {
+            @Valid @RequestBody PatientAuthDto.ChangePasswordRequest req) {
         if (!passwordEncoder.matches(req.getCurrentPassword(), patient.getPasswordHash())) {
             return ResponseEntity.status(400).body("Mevcut şifre hatalı.");
         }
@@ -104,7 +105,7 @@ public class PatientSelfController {
 
     @PostMapping("/medication-confirm")
     public ResponseEntity<?> confirmMedication(@AuthenticationPrincipal Patient patient,
-                                               @Valid @RequestBody MedicationConfirmRequest req) {
+            @Valid @RequestBody MedicationConfirmRequest req) {
         Medication med = medicationRepository.findById(req.getMedicationId())
                 .orElseThrow(() -> new RuntimeException("İlaç bulunamadı"));
 
@@ -137,14 +138,14 @@ public class PatientSelfController {
     @GetMapping("/doctor-notes/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadNoteCount(@AuthenticationPrincipal Patient patient) {
         long total = doctorNoteRepository.countByPatientId(patient.getId());
-        long read  = noteReadRepository.countByPatientId(patient.getId());
+        long read = noteReadRepository.countByPatientId(patient.getId());
         long unread = Math.max(0, total - read);
         return ResponseEntity.ok(Map.of("unreadCount", unread));
     }
 
     @PostMapping("/doctor-notes/{noteId}/read")
     public ResponseEntity<?> markNoteRead(@AuthenticationPrincipal Patient patient,
-                                          @PathVariable UUID noteId) {
+            @PathVariable UUID noteId) {
         DoctorNote note = doctorNoteRepository.findById(noteId)
                 .orElseThrow(() -> new RuntimeException("Not bulunamadı"));
         if (!note.getPatient().getId().equals(patient.getId())) {
@@ -161,6 +162,17 @@ public class PatientSelfController {
 
     // ─── Photos ──────────────────────────────────────────────────────────────
 
+    @PostMapping("/photos/check-angle")
+    public ResponseEntity<AngleCheckResponse> checkAngle(
+            @AuthenticationPrincipal Patient patient,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("angle") String angle) throws IOException {
+        
+        byte[] imageBytes = file.getBytes();
+        AngleCheckResponse response = aiAnalysisService.checkAngle(imageBytes, angle);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/photos")
     public ResponseEntity<List<Photo>> getPhotos(@AuthenticationPrincipal Patient patient) {
         return ResponseEntity.ok(photoRepository.findByPatientIdOrderByUploadedAtDesc(patient.getId()));
@@ -168,18 +180,21 @@ public class PatientSelfController {
 
     @PostMapping("/photos")
     public ResponseEntity<?> uploadPhoto(@AuthenticationPrincipal Patient patient,
-                                         @RequestParam("file") MultipartFile file,
-                                         @RequestParam("angle") String angle) throws IOException {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("angle") String angle) throws IOException {
         // Check upload period (only enforced once all photos in a session are uploaded)
         // We allow upload if lastPhotoUploadedAt is null OR period has passed
         if (patient.getLastPhotoUploadedAt() != null) {
-            long daysSinceLast = ChronoUnit.DAYS.between(patient.getLastPhotoUploadedAt().truncatedTo(ChronoUnit.DAYS), Instant.now().truncatedTo(ChronoUnit.DAYS));
+            long daysSinceLast = ChronoUnit.DAYS.between(patient.getLastPhotoUploadedAt().truncatedTo(ChronoUnit.DAYS),
+                    Instant.now().truncatedTo(ChronoUnit.DAYS));
             int period = patient.getPhotoUploadPeriodDays() != null ? patient.getPhotoUploadPeriodDays() : 30;
-            // Eğer yükleme aynı gün içindeyse (seri yüklemedir), ya da periyot dolmuşsa izin ver.
+            // Eğer yükleme aynı gün içindeyse (seri yüklemedir), ya da periyot dolmuşsa
+            // izin ver.
             if (daysSinceLast > 0 && daysSinceLast < period) {
                 long daysLeft = period - daysSinceLast;
                 return ResponseEntity.badRequest()
-                        .body("Fotoğraf yükleme periyodunuz dolmadı. " + daysLeft + " gün sonra tekrar yükleyebilirsiniz.");
+                        .body("Fotoğraf yükleme periyodunuz dolmadı. " + daysLeft
+                                + " gün sonra tekrar yükleyebilirsiniz.");
             }
         }
 
@@ -198,9 +213,14 @@ public class PatientSelfController {
                 System.currentTimeMillis() + getExtension(file.getOriginalFilename());
         Path dest = uploadPath.resolve(filename);
 
-        // Read bytes BEFORE transferTo() (stream can only be read once)
-        byte[] imageBytes = file.getBytes();
-        file.transferTo(dest);
+        // Read bytes BEFORE masking
+        byte[] originalBytes = file.getBytes();
+        
+        // Mask eyes for privacy
+        byte[] maskedBytes = aiAnalysisService.maskEyes(originalBytes);
+        
+        // Save the masked image
+        Files.write(dest, maskedBytes);
 
         String fileUrl = "/uploads/photos/" + patient.getId() + "/" + filename;
 
@@ -216,8 +236,10 @@ public class PatientSelfController {
         patient.setLastPhotoUploadedAt(Instant.now());
         patientRepository.save(patient);
 
-        // Trigger async AI analysis — fire-and-forget, never blocks the response
-        aiAnalysisService.analyzeAsync(photo, imageBytes);
+        // Trigger async AI analysis — fire-and-forget, never blocks the response.
+        // Send the masked image so the AI sees what the doctor sees, 
+        // or you could send the original. We send maskedBytes to ensure privacy everywhere.
+        aiAnalysisService.analyzeAsync(photo, maskedBytes);
 
         return ResponseEntity.ok(photo);
     }
@@ -231,7 +253,7 @@ public class PatientSelfController {
 
     @PostMapping("/side-effects")
     public ResponseEntity<SideEffectReport> reportSideEffect(@AuthenticationPrincipal Patient patient,
-                                                             @Valid @RequestBody SideEffectRequest req) {
+            @Valid @RequestBody SideEffectRequest req) {
         SideEffectReport report = new SideEffectReport();
         report.setPatient(patient);
         report.setDrugName(req.getDrugName());
@@ -251,13 +273,12 @@ public class PatientSelfController {
         return ResponseEntity.ok(Map.of(
                 "canSend", canSend,
                 "usedThisMonth", usedThisMonth,
-                "monthlyLimit", 1
-        ));
+                "monthlyLimit", 1));
     }
 
     @PostMapping("/emergency-alert")
     public ResponseEntity<?> sendEmergencyAlert(@AuthenticationPrincipal Patient patient,
-                                                @Valid @RequestBody EmergencyAlertRequest req) {
+            @Valid @RequestBody EmergencyAlertRequest req) {
         // Check monthly quota
         Instant startOfMonth = Instant.now().truncatedTo(ChronoUnit.DAYS)
                 .minus(Instant.now().atZone(java.time.ZoneOffset.UTC).getDayOfMonth() - 1, ChronoUnit.DAYS);
@@ -277,7 +298,8 @@ public class PatientSelfController {
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return ".jpg";
+        if (filename == null || !filename.contains("."))
+            return ".jpg";
         return filename.substring(filename.lastIndexOf('.'));
     }
 }
