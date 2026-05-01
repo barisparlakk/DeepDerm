@@ -1,0 +1,91 @@
+09:59:13 [INFO] ============================================================
+09:59:13 [INFO] AŞAMA 03 v4 — Saf YOLO Eğitim Döngüsü BAŞLIYOR
+09:59:13 [INFO] Çıktı : /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/egitim_v4
+09:59:13 [INFO] Device: 0
+09:59:13 [INFO] ============================================================
+09:59:13 [INFO] box_iou CPU patch (nvrtc compute_120 fix) ✓
+09:59:13 [INFO] data.yaml: /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/islenmiş_veri/data.yaml
+09:59:13 [INFO]   nc=4 | ['comedone', 'nodule', 'papule', 'pustule']
+09:59:13 [INFO] Model yükleniyor: yolo11s.pt (sıfırdan)
+09:59:14 [INFO] Model hazır: 9.46M parametre (COCO pretrained)
+09:59:14 [INFO] ============================================================
+09:59:14 [INFO] Eğitim başlıyor (v4 — Saf YOLO)...
+09:59:14 [INFO]   base_model  : yolo11s.pt (SIFIRDAN)
+09:59:14 [INFO]   imgsz       : 1024px
+09:59:14 [INFO]   batch       : 8
+09:59:14 [INFO]   multi_scale : 0.5 (yeni!)
+09:59:14 [INFO]   box weight  : 7.5 (varsayılan)
+09:59:14 [INFO]   copy_paste  : 0.1 (hafifletildi)
+09:59:14 [INFO]   mixup       : 0.1 (hafifletildi)
+09:59:14 [INFO]   Focal Loss  : YOK (saf YOLO)
+09:59:14 [INFO]   ES patience : 25
+09:59:14 [INFO]   backbone    : epoch 15'de çözülür
+09:59:14 [INFO] ============================================================
+09:59:28 [INFO] Epoch 0: Backbone donduruldu — 4.98M / 9.43M eğitilebilir
+10:00:32 [INFO] Epoch   0 | mAP50=0.0581 | P=0.101 R=0.229 F1=0.140 | box=2.6808 cls=3.2596 | LR=3.32e-04 | 79sn
+10:01:31 [INFO] Epoch   1 | mAP50=0.0487 | P=0.331 R=0.205 F1=0.254 | box=2.6145 cls=3.1107 | LR=6.65e-04 | 59sn
+10:02:13 [INFO] Epoch   2 | mAP50=0.0686 | P=0.088 R=0.217 F1=0.125 | box=2.7448 cls=2.6636 | LR=9.98e-04 | 42sn
+10:02:56 [INFO] Epoch   3 | mAP50=0.0832 | P=0.137 R=0.231 F1=0.172 | box=2.5892 cls=2.7602 | LR=9.99e-04 | 43sn
+10:04:12 [INFO] Epoch   4 | mAP50=0.0974 | P=0.108 R=0.250 F1=0.151 | box=2.5604 cls=2.7308 | LR=9.98e-04 | 76sn
+10:04:56 [INFO] Epoch   5 | mAP50=0.0901 | P=0.137 R=0.331 F1=0.194 | box=2.6120 cls=2.5564 | LR=9.97e-04 | 44sn
+10:05:38 [INFO] Epoch   6 | mAP50=0.0919 | P=0.141 R=0.304 F1=0.193 | box=2.5317 cls=2.5479 | LR=9.96e-04 | 42sn
+10:09:10 [INFO] ============================================================
+10:09:10 [INFO] AŞAMA 03 v4 — Saf YOLO Eğitim Döngüsü BAŞLIYOR
+10:09:10 [INFO] Çıktı : /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/egitim_v4
+10:09:10 [INFO] Device: 0
+10:09:10 [INFO] ============================================================
+10:09:10 [INFO] box_iou CPU patch (nvrtc compute_120 fix) ✓
+10:09:10 [INFO] data.yaml: /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/islenmiş_veri/data.yaml
+10:09:10 [INFO]   nc=4 | ['comedone', 'nodule', 'papule', 'pustule']
+10:09:10 [INFO] Model yükleniyor: yolo11s.pt (sıfırdan)
+10:09:10 [INFO] Model hazır: 9.46M parametre (COCO pretrained)
+10:09:10 [INFO] ============================================================
+10:09:10 [INFO] Eğitim başlıyor (v4 — Saf YOLO)...
+10:09:10 [INFO]   base_model  : yolo11s.pt (SIFIRDAN)
+10:09:10 [INFO]   imgsz       : 1024px
+10:09:10 [INFO]   batch       : 8
+10:09:10 [INFO]   multi_scale : 0.5 (yeni!)
+10:09:10 [INFO]   box weight  : 7.5 (varsayılan)
+10:09:10 [INFO]   copy_paste  : 0.1 (hafifletildi)
+10:09:10 [INFO]   mixup       : 0.1 (hafifletildi)
+10:09:10 [INFO]   Focal Loss  : YOK (saf YOLO)
+10:09:10 [INFO]   ES patience : 25
+10:09:10 [INFO]   backbone    : epoch 15'de çözülür
+10:09:10 [INFO] ============================================================
+10:09:24 [INFO] Epoch 0: Backbone donduruldu — 4.98M / 9.43M eğitilebilir
+10:10:28 [INFO] Epoch   0 | mAP50=0.0581 | P=0.101 R=0.229 F1=0.140 | box=2.6808 cls=3.2596 | LR=3.32e-04 | 78sn
+10:11:19 [INFO] Epoch   1 | mAP50=0.0487 | P=0.331 R=0.205 F1=0.254 | box=2.6145 cls=3.1107 | LR=6.65e-04 | 52sn
+10:12:04 [INFO] Epoch   2 | mAP50=0.0686 | P=0.088 R=0.217 F1=0.125 | box=2.7448 cls=2.6636 | LR=9.98e-04 | 45sn
+10:12:48 [INFO] Epoch   3 | mAP50=0.0832 | P=0.137 R=0.231 F1=0.172 | box=2.5892 cls=2.7602 | LR=9.99e-04 | 44sn
+10:59:30 [INFO] ============================================================
+10:59:30 [INFO] AŞAMA 03 v4 — Saf YOLO Eğitim Döngüsü BAŞLIYOR
+10:59:30 [INFO] Çıktı : /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/egitim_v4
+10:59:30 [INFO] Device: 0
+10:59:30 [INFO] ============================================================
+10:59:30 [INFO] box_iou CPU patch (nvrtc compute_120 fix) ✓
+10:59:30 [INFO] data.yaml: /mnt/c/Users/Yusuf Soylu/Desktop/Dermatoloji Projesi/Robo Flow V1/islenmiş_veri/data.yaml
+10:59:30 [INFO]   nc=4 | ['comedone', 'nodule', 'papule', 'pustule']
+10:59:30 [INFO] Model yükleniyor: yolo11s.pt (sıfırdan)
+10:59:30 [INFO] Model hazır: 9.46M parametre (COCO pretrained)
+10:59:30 [INFO] ============================================================
+10:59:30 [INFO] Eğitim başlıyor (v4 — Saf YOLO)...
+10:59:30 [INFO]   base_model  : yolo11s.pt (SIFIRDAN)
+10:59:30 [INFO]   imgsz       : 1024px
+10:59:31 [INFO]   batch       : 8
+10:59:31 [INFO]   multi_scale : 0.5 (yeni!)
+10:59:31 [INFO]   box weight  : 7.5 (varsayılan)
+10:59:31 [INFO]   copy_paste  : 0.1 (hafifletildi)
+10:59:31 [INFO]   mixup       : 0.1 (hafifletildi)
+10:59:31 [INFO]   Focal Loss  : YOK (saf YOLO)
+10:59:31 [INFO]   ES patience : 25
+10:59:31 [INFO]   backbone    : epoch 15'de çözülür
+10:59:31 [INFO] ============================================================
+11:00:06 [INFO] Epoch 0: Backbone donduruldu — 4.98M / 9.43M eğitilebilir
+11:02:11 [INFO] Epoch   0 | mAP50=0.0581 | P=0.101 R=0.229 F1=0.140 | box=2.6808 cls=3.2596 | LR=3.32e-04 | 160sn
+11:03:48 [INFO] Epoch   1 | mAP50=0.0487 | P=0.331 R=0.205 F1=0.254 | box=2.6145 cls=3.1107 | LR=6.65e-04 | 98sn
+11:05:07 [INFO] Epoch   2 | mAP50=0.0686 | P=0.088 R=0.217 F1=0.125 | box=2.7448 cls=2.6636 | LR=9.98e-04 | 79sn
+11:06:26 [INFO] Epoch   3 | mAP50=0.0832 | P=0.137 R=0.231 F1=0.172 | box=2.5892 cls=2.7602 | LR=9.99e-04 | 79sn
+11:14:58 [INFO] Epoch   4 | mAP50=0.0974 | P=0.108 R=0.250 F1=0.151 | box=2.5604 cls=2.7308 | LR=9.98e-04 | 511sn
+11:16:16 [INFO] Epoch   5 | mAP50=0.0901 | P=0.137 R=0.331 F1=0.194 | box=2.6120 cls=2.5564 | LR=9.97e-04 | 79sn
+11:17:32 [INFO] Epoch   6 | mAP50=0.0919 | P=0.141 R=0.304 F1=0.193 | box=2.5317 cls=2.5479 | LR=9.96e-04 | 76sn
+11:18:55 [INFO] Epoch   7 | mAP50=0.0887 | P=0.114 R=0.250 F1=0.157 | box=2.5846 cls=2.5995 | LR=9.95e-04 | 82sn

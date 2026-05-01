@@ -1,0 +1,23 @@
+model: YOLOv11s — C2PSA built-in + Native Focal Loss
+versiyon: '2.1'
+base_model: yolo11s.pt
+img_size: 640
+nc: 4
+names:
+  0: comedone
+  1: nodule
+  2: papule
+  3: pustule
+attention: C2PSA built-in (Layer 10)
+focal_loss:
+  not: fl_gamma=2.0 Aşama 03 train() ile verilir
+  gamma: 2.0
+  yontem: YOLO native v8DetectionLoss
+transfer_learning:
+  pretrained: yolo11s.pt
+  freeze_layers: 10
+  frozen_params_M: 4.45
+  trainable_params_M: 5.01
+  trainable_pct: 52.9
+  unfreeze_epoch: Aşama 03'te backbone_coz_epoch ile
+  asama03_uyari: freeze= parametresi VERİLMEMELİ — backbone_helper.coz() yönetiyor

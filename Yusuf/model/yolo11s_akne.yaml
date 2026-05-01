@@ -1,0 +1,42 @@
+'# Model': YOLOv11s + SABottleneck (FPN) + Dynamic Focal Loss
+'# Versiyon': 1.0 — Aşama 02
+base_model: yolo11s.pt
+img_size: 640
+nc: 4
+names:
+  0: comedone
+  1: nodule
+  2: papule
+  3: pustule
+sinif_sayilari:
+  0: 829
+  1: 6339
+  2: 3492
+  3: 4316
+sa_bottleneck:
+  fpn_layers:
+  - 15
+  - 18
+  - 21
+  channels:
+  - 512
+  - 384
+  - 768
+  reduction: 16
+  kernel: 7
+focal_loss:
+  gamma_base: 2.0
+  alpha_smoothing: 0.1
+  per_class_gamma:
+    comedone: 5.5305
+    nodule: 2.0
+    papule: 2.6947
+    pustule: 2.4238
+  per_class_alpha:
+    comedone: 0.6018
+    nodule: 0.1004
+    papule: 0.1619
+    pustule: 0.1358
+transfer_learning:
+  pretrained: yolo11s.pt
+  freeze_backbone_layers: 10

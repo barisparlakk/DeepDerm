@@ -1,0 +1,11 @@
+names: ["comedone", "nodule", "papule", "pustule"]
+nc: 4
+roboflow:
+  license: CC BY 4.0
+  project: acne-detection-v1
+  url: https://universe.roboflow.com/acne-project-2auvb/acne-detection-v1/dataset/1
+  version: 1
+  workspace: acne-project-2auvb
+test: ../test/images
+train: ../train/images
+val: ../valid/images
