@@ -38,14 +38,17 @@
           "cameraPermission": "Akne tedavinizin takibi için yüz fotoğrafı çekmek üzere kamera erişimi gereklidir."
         }
       ],
+      "expo-font",
       [
-        "expo-notifications",
+        "expo-build-properties",
         {
-          "icon": "./assets/icon.png",
-          "color": "#0EA5E9"
+          "ios": {
+            "deploymentTarget": "15.5",
+            "useFrameworks": "static"
+          }
         }
       ],
-      "expo-font"
+      "./plugins/with-nitro-cxx-podfile-fix"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
