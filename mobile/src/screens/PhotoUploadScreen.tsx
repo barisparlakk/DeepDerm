@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, Alert, TouchableOpacity,
-  ActivityIndicator, StatusBar, ScrollView,
+  ActivityIndicator, StatusBar,
 } from 'react-native';
-import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import { uploadPhoto, checkPhotoAngle } from '../api/patient';
 import { Button } from '../components/Button';
 import { colors, spacing, radius } from '../utils/theme';
@@ -17,8 +17,9 @@ const ANGLES: { key: Angle; label: string; instruction: string }[] = [
 ];
 
 export default function PhotoUploadScreen({ navigation }: any) {
-  const [permission, requestPermission] = useCameraPermissions();
-  const cameraRef = useRef<CameraView>(null);
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const device = useCameraDevice('back');
+  const cameraRef = useRef<any>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [captured, setCaptured] = useState<{ [k in Angle]?: string }>({});
   const [uploading, setUploading] = useState(false);
@@ -27,15 +28,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
 
   const angle = ANGLES[currentStep];
 
-  if (!permission) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (!permission.granted) {
+  if (!hasPermission) {
     return (
       <View style={styles.center}>
         <Text style={styles.permText}>Kamera izni gereklidir.</Text>
@@ -48,28 +41,37 @@ export default function PhotoUploadScreen({ navigation }: any) {
     if (!cameraRef.current) return;
     try {
       setCheckingAngle(true);
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, skipProcessing: false });
+      const photo = await cameraRef.current.takePhoto({
+        qualityPrioritization: 'speed',
+        flash: 'off',
+        skipMetadata: true,
+      });
       if (!photo) {
         setCheckingAngle(false);
         return;
       }
       
+      const fileUri = `file://${photo.path}`;
+
       // Check angle on backend
-      const result = await checkPhotoAngle(photo.uri, angle.key);
+      const result = await checkPhotoAngle(fileUri, angle.key);
       setCheckingAngle(false);
-      
+
       if (!result.valid) {
         Alert.alert('Hatalı Açı', result.message || 'Lütfen açıyı düzeltip tekrar çekin.');
         return;
       }
-
-      setCaptured(prev => ({ ...prev, [angle.key]: photo.uri }));
+      setCaptured(prev => ({ ...prev, [angle.key]: fileUri }));
       if (currentStep < ANGLES.length - 1) {
         setTimeout(() => setCurrentStep(s => s + 1), 300);
       }
     } catch (err: any) {
       setCheckingAngle(false);
-      Alert.alert('Hata', 'Fotoğraf çekilemedi veya açı doğrulanamadı. Lütfen tekrar deneyin.');
+      const data = err?.response?.data;
+      const msg = typeof data === 'string'
+        ? data
+        : data?.error || data?.message || err?.message || 'Fotoğraf çekilemedi veya açı doğrulanamadı.';
+      Alert.alert('Hata', msg);
     }
   };
 
@@ -149,21 +151,27 @@ export default function PhotoUploadScreen({ navigation }: any) {
 
       {/* Camera */}
       <View style={styles.cameraContainer}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing={'back' as CameraType}
-        >
-          {/* Overlay guide */}
-          <View style={styles.overlay}>
-            <View style={styles.faceGuide} />
-            {/* Corner brackets */}
-            <View style={[styles.corner, styles.cornerTL]} />
-            <View style={[styles.corner, styles.cornerTR]} />
-            <View style={[styles.corner, styles.cornerBL]} />
-            <View style={[styles.corner, styles.cornerBR]} />
-          </View>
-        </CameraView>
+        {device ? (
+            <Camera
+              ref={cameraRef as any}
+              style={StyleSheet.absoluteFill}
+              device={device}
+              isActive={!isCaptured && !uploading && !done}
+              photo={true}
+            />
+        ) : (
+          <View style={styles.center}><ActivityIndicator color="#fff" /></View>
+        )}
+
+        {/* Overlay guide */}
+        <View style={styles.overlay}>
+          <View style={styles.faceGuide} />
+          {/* Corner brackets */}
+          <View style={[styles.corner, styles.cornerTL]} />
+          <View style={[styles.corner, styles.cornerTR]} />
+          <View style={[styles.corner, styles.cornerBL]} />
+          <View style={[styles.corner, styles.cornerBR]} />
+        </View>
       </View>
 
       {/* Instruction */}
@@ -250,7 +258,9 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.35)',
     backgroundColor: 'transparent',
   },
+  faceGuideCorrect: { borderColor: colors.accent, borderWidth: 3 },
   corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: colors.primary },
+  cornerCorrect: { borderColor: colors.accent },
   cornerTL: { top: '50%', left: '50%',
     marginTop: -(GUIDE * 0.625 + 4), marginLeft: -(GUIDE / 2 + 4),
     borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 4 },
