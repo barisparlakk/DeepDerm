@@ -10,6 +10,7 @@
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/controller/PhotoController.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AiAnalysisResponse.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AiLabelRequest.java
+/Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AngleCheckResponse.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/AuthDto.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/EmergencyAlertRequest.java
 /Users/barisparlak/Desktop/DeepDerm/backend/src/main/java/com/deepderm/dto/MedicationConfirmRequest.java
