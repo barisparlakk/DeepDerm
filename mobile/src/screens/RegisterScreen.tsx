@@ -48,8 +48,17 @@ export default function RegisterScreen({ navigation }: any) {
         kvkkConsent: kvkk,
       });
     } catch (err: any) {
-      const msg = err?.response?.data || 'Kayıt başarısız. Lütfen tekrar deneyin.';
-      Alert.alert('Kayıt Hatası', typeof msg === 'string' ? msg : 'Kayıt başarısız.');
+      const data = err?.response?.data;
+      let msg: string;
+      if (typeof data === 'string') {
+        msg = data;
+      } else if (data?.fields) {
+        // Validation error — show the first field error
+        msg = Object.values(data.fields as Record<string, string>)[0] ?? 'Kayıt başarısız.';
+      } else {
+        msg = data?.error || data?.message || 'Kayıt başarısız. Lütfen tekrar deneyin.';
+      }
+      Alert.alert('Kayıt Hatası', msg);
     } finally {
       setLoading(false);
     }
