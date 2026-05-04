@@ -66,14 +66,22 @@ async def check_angle(file: UploadFile = File(...), target_angle: str = Form(...
         right_ear = landmarks[234]
         left_ear  = landmarks[454]
 
-        dist_left_side  = nose.x - right_ear.x
-        dist_right_side = left_ear.x - nose.x
+        # Normalized nose offset from the midpoint between the two ears.
+        # When showing the left cheek, left_ear.x < nose.x which makes the
+        # old (dist_left / dist_right) ratio go negative and always trigger
+        # the "right" branch. Using an offset relative to the ear midpoint
+        # avoids signed-denominator issues entirely.
+        #
+        # nose_offset > 0  → nose is right of ear centre → left cheek visible
+        # nose_offset < 0  → nose is left of ear centre  → right cheek visible
+        # nose_offset ≈ 0  → facing forward
+        ear_mid   = (right_ear.x + left_ear.x) / 2
+        ear_span  = abs(left_ear.x - right_ear.x) + 1e-6
+        nose_offset = (nose.x - ear_mid) / ear_span
 
-        ratio = dist_left_side / (dist_right_side + 1e-6)
-
-        if ratio < 0.6:
+        if nose_offset < -0.12:
             detected_angle = "right"
-        elif ratio > 1.6:
+        elif nose_offset > 0.12:
             detected_angle = "left"
         else:
             detected_angle = "front"
