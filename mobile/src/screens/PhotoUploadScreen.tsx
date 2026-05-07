@@ -12,8 +12,8 @@ type Angle = 'front' | 'right' | 'left';
 
 const ANGLES: { key: Angle; label: string; instruction: string }[] = [
   { key: 'front', label: 'Ön Görünüm',  instruction: 'Kameranıza düz bakın, yüzünüz ortada olsun.' },
-  { key: 'right', label: 'Sağ Yanak',   instruction: 'Başınızı hafifçe sola çevirin (sağ yanağınız görünsün).' },
-  { key: 'left',  label: 'Sol Yanak',   instruction: 'Başınızı hafifçe sağa çevirin (sol yanağınız görünsün).' },
+  { key: 'left',  label: 'Sağ Yanak',   instruction: 'Başınızı hafifçe sola çevirin (sağ yanağınız görünsün).' },
+  { key: 'right', label: 'Sol Yanak',   instruction: 'Başınızı hafifçe sağa çevirin (sol yanağınız görünsün).' },
 ];
 
 export default function PhotoUploadScreen({ navigation }: any) {
