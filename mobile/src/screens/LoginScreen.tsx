@@ -23,8 +23,11 @@ export default function LoginScreen({ navigation }: any) {
     try {
       await login(email.trim(), password);
     } catch (err: any) {
-      const msg = err?.response?.data || 'Giriş başarısız. E-posta veya şifre hatalı.';
-      Alert.alert('Giriş Hatası', typeof msg === 'string' ? msg : 'Giriş başarısız.');
+      const data = err?.response?.data;
+      const msg = typeof data === 'string'
+        ? data
+        : data?.error || data?.message || 'Giriş başarısız. E-posta veya şifre hatalı.';
+      Alert.alert('Giriş Hatası', msg);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,12 @@
+import axios from 'axios';
 import client from './client';
+
+// Direct client for DermAI — no auth needed, bypasses Spring Boot for speed
+const dermaiClient = axios.create({
+  baseURL: process.env.EXPO_PUBLIC_DERMAI_URL || 'http://192.168.1.36:8000',
+  timeout: 30000,
+});
+
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 export const getProfile = async () => {
@@ -63,13 +71,15 @@ export const uploadPhoto = async (fileUri: string, angle: 'front' | 'right' | 'l
 };
 
 export const checkPhotoAngle = async (fileUri: string, angle: 'front' | 'right' | 'left') => {
+  // Call DermAI directly — skips the Spring Boot proxy hop, no auth required.
+  // DermAI field name is "target_angle", not "angle".
   const formData = new FormData();
   const filename = fileUri.split('/').pop() || 'photo.jpg';
   const type = filename.endsWith('.png') ? 'image/png' : 'image/jpeg';
-  // @ts-ignore
+  // @ts-ignore — RN FormData accepts this shape
   formData.append('file', { uri: fileUri, name: filename, type });
-  formData.append('angle', angle);
-  const { data } = await client.post('/patients/me/photos/check-angle', formData, {
+  formData.append('target_angle', angle);
+  const { data } = await dermaiClient.post('/quality/check-angle', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return data;
