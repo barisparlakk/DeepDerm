@@ -10,7 +10,7 @@ import logging
 import numpy as np
 from ultralytics import YOLO
 
-from utils.label_map import ID_TO_EN, to_turkish_label
+from utils.label_map import ID_TO_EN, canonical_label_en, to_turkish_label
 from models.heuristic_detector import detect_heuristic_lesions
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,10 @@ class AcneDetector:
         if self._use_heuristic_fallback():
             return detect_heuristic_lesions(image_np=image_np, conf_threshold=CONFIDENCE_THRESHOLD)
 
-        # Ultralytics accepts numpy arrays natively (RGB uint8 or float)
+        # Ultralytics expects RGB uint8 (0-255); convert if float32 (0-1)
+        if image_np.dtype != np.uint8:
+            image_np = (image_np * 255).astype(np.uint8)
+
         results = self._model.predict(
             source        = image_np,
             conf          = CONFIDENCE_THRESHOLD,
@@ -139,7 +142,7 @@ class AcneDetector:
                 x1, y1, x2, y2 = (int(v) for v in box.xyxy[0].tolist())
                 bbox = {"x": x1, "y": y1, "w": x2 - x1, "h": y2 - y1}
 
-                label_en = self._resolve_label_en(coco_class_id)
+                label_en = canonical_label_en(self._resolve_label_en(coco_class_id))
                 label_tr = to_turkish_label(label_en)
 
                 detections.append({

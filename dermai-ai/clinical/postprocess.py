@@ -33,15 +33,21 @@ def _normalize_label(label: str | None) -> str:
     value = " ".join(label.strip().lower().replace("_", " ").replace("-", " ").split())
     aliases = {
         "papule": "papule",
+        "papules": "papule",
         "papül": "papule",
         "pustule": "pustule",
+        "pustules": "pustule",
         "püstül": "pustule",
         "nodule": "nodule",
+        "nodules": "nodule",
         "nodül": "nodule",
         "comedone": "comedone",
+        "comedones": "comedone",
         "komedon": "comedone",
         "blackhead": "comedone",
+        "blackheads": "comedone",
         "whitehead": "comedone",
+        "whiteheads": "comedone",
     }
     return aliases.get(value, value)
 
@@ -156,4 +162,3 @@ def _comparison_summary(trend_tr: str, deltas: dict) -> str:
         f"İnflamatuar lezyon farkı {deltas['inflammatory_total']:+.0f}, "
         f"ağırlıklı skor farkı {deltas['weighted_score']:+.2f}; {direction}."
     )
-

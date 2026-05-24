@@ -4,12 +4,13 @@ label_map.py
 Bidirectional mapping between English and Turkish acne lesion class names.
 """
 
-# Ordered list — index matches the custom-trained YOLO class ID
+# Canonical API labels. The trained DermAI dataset uses lowercase/plural names
+# such as "papules"; normalize them before exposing results to the app.
 LABELS_EN: list[str] = [
+    "Comedone",
+    "Nodule",
     "Papule",
     "Pustule",
-    "Nodule",
-    "Comedone",
     "Cyst",
     "Inflammatory lesion",
     "Scar",
@@ -17,10 +18,10 @@ LABELS_EN: list[str] = [
 
 # Turkish display names shown in the doctor panel and API responses
 LABELS_TR: list[str] = [
+    "Komedon",
+    "Nodül",
     "Papül",
     "Püstül",
-    "Nodül",
-    "Komedon",
     "Kist",
     "İnflamatuar lezyon",
     "Skar / Akne izi",
@@ -45,10 +46,37 @@ EN_NORMALIZED_TO_TR: dict[str, str] = {
     for en, tr in EN_TO_TR.items()
 }
 
+EN_ALIASES: dict[str, str] = {
+    "comedone": "Comedone",
+    "comedones": "Comedone",
+    "blackhead": "Comedone",
+    "blackheads": "Comedone",
+    "whitehead": "Comedone",
+    "whiteheads": "Comedone",
+    "nodule": "Nodule",
+    "nodules": "Nodule",
+    "papule": "Papule",
+    "papules": "Papule",
+    "pustule": "Pustule",
+    "pustules": "Pustule",
+    "cyst": "Cyst",
+    "cysts": "Cyst",
+    "inflammatory lesion": "Inflammatory lesion",
+    "inflammatory lesions": "Inflammatory lesion",
+    "scar": "Scar",
+    "scars": "Scar",
+}
+
+
+def canonical_label_en(label_en: str) -> str:
+    """Return the canonical English API label for model-native class names."""
+    return EN_ALIASES.get(_normalize_label(label_en), label_en)
+
 
 def to_turkish_label(label_en: str) -> str:
     """
     Map an English label to Turkish when it is one of the known acne classes.
     Falls back to the original label for unknown classes.
     """
-    return EN_NORMALIZED_TO_TR.get(_normalize_label(label_en), label_en)
+    canonical = canonical_label_en(label_en)
+    return EN_NORMALIZED_TO_TR.get(_normalize_label(canonical), canonical)
