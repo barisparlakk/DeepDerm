@@ -1,10 +1,10 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, Users, Bell, LogOut, Activity, 
-  ChevronRight, Menu, X
+import {
+  LayoutDashboard, Users, Bell, LogOut, Activity,
+  ChevronRight, Menu, X, Moon, Sun
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 
 const navItems = [
@@ -19,6 +19,17 @@ export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const { unreadCount } = useNotifications();
+  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [dark]);
 
   const handleLogout = () => {
     logout();
@@ -34,25 +45,38 @@ export default function Sidebar() {
       `}
     >
       {/* Logo / Header */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-100 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 shadow-md">
-          <Activity size={18} className="text-white" />
+      {collapsed ? (
+        <div className="flex flex-col items-center py-4 border-b border-slate-100 gap-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-md">
+            <Activity size={18} className="text-white" />
+          </div>
+          <button
+            onClick={() => setCollapsed(false)}
+            className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+            title="Menüyü Aç"
+          >
+            <Menu size={16} />
+          </button>
         </div>
-        {!collapsed && (
+      ) : (
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 shadow-md">
+            <Activity size={18} className="text-white" />
+          </div>
           <div>
-            <span className="text-lg font-bold text-slate-900">Deep</span>
-            <span className="text-lg font-bold text-blue-700">Derm</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white">Deep</span>
+            <span className="text-lg font-bold text-blue-500">Derm</span>
             <p className="text-[10px] text-slate-400 -mt-0.5 tracking-wide uppercase">Dermatoloji Paneli</p>
           </div>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
-          title={collapsed ? 'Menüyü Aç' : 'Menüyü Kapat'}
-        >
-          {collapsed ? <Menu size={16} /> : <X size={16} />}
-        </button>
-      </div>
+          <button
+            onClick={() => setCollapsed(true)}
+            className="ml-auto p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+            title="Menüyü Kapat"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Nav Links */}
       <nav className="flex-1 p-3 space-y-1">
@@ -97,6 +121,14 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+        <button
+          onClick={() => setDark(d => !d)}
+          className={`w-full sidebar-link-inactive text-slate-600 hover:bg-slate-100 mb-1 ${collapsed ? 'justify-center px-2' : ''}`}
+          title={dark ? 'Aydınlık Mod' : 'Karanlık Mod'}
+        >
+          {dark ? <Sun size={18} /> : <Moon size={18} />}
+          {!collapsed && <span>{dark ? 'Aydınlık Mod' : 'Karanlık Mod'}</span>}
+        </button>
         <button
           onClick={handleLogout}
           className={`w-full sidebar-link-inactive text-red-600 hover:bg-red-50 hover:text-red-700 ${collapsed ? 'justify-center px-2' : ''}`}

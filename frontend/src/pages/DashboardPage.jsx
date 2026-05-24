@@ -7,8 +7,19 @@ import {
   Users, Clock, ImageIcon, AlertTriangle, ChevronRight,
   TrendingUp, Activity, Bell, CheckCircle2
 } from 'lucide-react';
-import { apiGetDashboard, apiGetPatients } from '../services/api';
+import { apiGetDashboard, apiGetPatients, apiGetSeverityDistribution, apiGetRecentPhotos } from '../services/api';
 import { formatDistanceToNow } from '../utils/dateUtils';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const SEVERITY_COLORS = {
+  clear:      '#22c55e',
+  mild:       '#eab308',
+  moderate:   '#f97316',
+  severe:     '#ef4444',
+  very_severe:'#7c3aed',
+};
+
+const ANGLE_TR = { front: 'Ön', right: 'Sağ', left: 'Sol' };
 
 export default function DashboardPage() {
   const { doctor } = useAuth();
@@ -17,10 +28,14 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [patients, setPatients] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [severityData, setSeverityData] = useState([]);
+  const [recentPhotos, setRecentPhotos] = useState([]);
 
   useEffect(() => {
     apiGetDashboard().then((s) => { setStats(s); setLoadingStats(false); });
     apiGetPatients().then(setPatients);
+    apiGetSeverityDistribution().then(setSeverityData).catch(() => {});
+    apiGetRecentPhotos().then(setRecentPhotos).catch(() => {});
   }, []);
 
   const unreadNotifs = notifications.filter((n) => !n.read).slice(0, 5);
@@ -137,6 +152,41 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Recent Photos Strip */}
+      {recentPhotos.length > 0 && (
+        <div className="card mb-6 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <ImageIcon size={16} className="text-blue-700" />
+              <h2 className="font-semibold text-slate-900 text-sm">Son Yüklenen Fotoğraflar</h2>
+            </div>
+            <span className="text-xs text-slate-400">Hızlı inceleme için tıkla</span>
+          </div>
+          <div className="flex gap-3 p-4 overflow-x-auto">
+            {recentPhotos.map((ph) => (
+              <div
+                key={ph.id}
+                onClick={() => navigate(`/patients/${ph.patientId}`)}
+                className="flex-shrink-0 cursor-pointer group"
+              >
+                <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-blue-400 transition-all shadow-sm">
+                  <img
+                    src={`http://localhost:8080${ph.fileUrl}`}
+                    alt=""
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    onError={e => { e.target.style.display='none'; e.target.parentNode.classList.add('bg-slate-100'); }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-600 text-center mt-1 font-medium truncate w-20">
+                  {ph.patientName.split(' ')[0]}
+                </p>
+                <p className="text-[9px] text-slate-400 text-center">{ANGLE_TR[ph.angle] || ph.angle}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Patients */}
         <div className="card">
@@ -223,6 +273,71 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Severity Distribution Donut */}
+      {severityData.length > 0 && (
+        <div className="card mt-6">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-100">
+            <TrendingUp size={18} className="text-violet-600" />
+            <h2 className="font-semibold text-slate-900">Lezyon Şiddet Dağılımı</h2>
+            <span className="ml-auto text-xs text-slate-400">Tüm AI analizleri</span>
+          </div>
+          <div className="flex flex-col md:flex-row items-center gap-4 p-5">
+            <ResponsiveContainer width={220} height={200}>
+              <PieChart>
+                <Pie
+                  data={severityData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  dataKey="count"
+                  nameKey="labelTr"
+                >
+                  {severityData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={SEVERITY_COLORS[entry.label] || '#94a3b8'}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v, n) => [v + ' analiz', n]}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+
+            <div className="flex flex-col gap-2 flex-1">
+              {severityData.map((s) => {
+                const total = severityData.reduce((acc, x) => acc + Number(x.count), 0);
+                const pct = total > 0 ? Math.round((Number(s.count) / total) * 100) : 0;
+                const color = SEVERITY_COLORS[s.label] || '#94a3b8';
+                return (
+                  <div key={s.label} className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-sm text-slate-700 flex-1">{s.labelTr}</span>
+                    <div className="flex items-center gap-2 w-40">
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: color }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-600 w-8 text-right">{pct}%</span>
+                    </div>
+                    <span className="text-xs text-slate-400 w-10 text-right">{s.count} analiz</span>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100">
+                Toplam {severityData.reduce((a, x) => a + Number(x.count), 0)} AI analizi
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

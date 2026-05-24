@@ -9,7 +9,7 @@
 
   body {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    @apply bg-slate-100 text-slate-900;
+    @apply bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
     line-height: 1.6;
     min-height: 100vh;
   }
@@ -17,6 +17,53 @@
   #root {
     min-height: 100vh;
   }
+
+  /* ── Dark mode ── */
+
+  /* Kart bileşenleri */
+  .dark .card {
+    background-color: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Sidebar */
+  .dark aside {
+    background-color: #0f172a;
+    border-color: #1e293b;
+  }
+  .dark .sidebar-link-inactive {
+    color: #94a3b8;
+  }
+  .dark .sidebar-link-inactive:hover {
+    background-color: #1e293b;
+    color: #f1f5f9;
+  }
+
+  .dark .page-title { color: #f1f5f9; }
+  .dark .page-subtitle { color: #94a3b8; }
+
+  /* Form elemanları */
+  .dark input, .dark textarea, .dark select {
+    background-color: #273549;
+    border-color: #334155;
+    color: #f1f5f9;
+  }
+  .dark input::placeholder, .dark textarea::placeholder {
+    color: #64748b;
+  }
+
+  /* Butonlar */
+  .dark .btn-secondary {
+    background-color: #273549;
+    color: #cbd5e1;
+    border-color: #334155;
+  }
+  .dark .btn-secondary:hover { background-color: #334155; }
+
+  /* Notification list */
+  .dark .notification-item { border-color: #1e293b; }
+  .dark .notification-item:hover { background-color: #273549; }
+
 }
 
 @layer components {
@@ -131,3 +178,51 @@
     overflow: hidden;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Dark mode overrides — attribute selectors kullanılıyor
+   (.bg-white gibi class selector yerine [class~="bg-white"])
+   Böylece Tailwind circular-dependency hatası oluşmuyor.
+   ───────────────────────────────────────────────────────────── */
+
+/* Kart içi arka planlar */
+.dark .card [class~="bg-white"],
+.dark .card [class~="bg-slate-50"]  { background-color: #273549 !important; }
+.dark .card [class~="bg-slate-100"] { background-color: #2d3f55 !important; }
+
+/* Hover arka planları */
+.dark .card [class*="hover:bg-slate-"]:hover { background-color: #273549 !important; }
+
+/* Renkli yüzeyler */
+.dark .card [class~="bg-amber-50"]  { background-color: #292014 !important; border-color: #44310a !important; }
+.dark .card [class~="bg-violet-50"] { background-color: #1e1730 !important; border-color: #2e1e4e !important; }
+.dark .card [class~="bg-blue-50"]   { background-color: #0f1f35 !important; border-color: #1e3a5f !important; }
+.dark .card [class~="bg-red-50"]    { background-color: #2d1515 !important; border-color: #5c2020 !important; }
+
+/* Metin renkleri */
+.dark .card [class~="text-slate-900"] { color: #f1f5f9 !important; }
+.dark .card [class~="text-slate-700"] { color: #cbd5e1 !important; }
+.dark .card [class~="text-slate-600"] { color: #94a3b8 !important; }
+.dark .card [class~="text-slate-500"] { color: #64748b !important; }
+
+/* Çizgiler / border'lar — parlak beyazdan kurtulmak için */
+.dark .card [class~="border-slate-100"] { border-color: #2a3a4f !important; }
+.dark .card [class~="border-slate-200"] { border-color: #334155 !important; }
+.dark .card [class*="divide-slate-"] > * + * { border-color: #2a3a4f !important; }
+
+/* Stat card büyük sayılar */
+.dark [class~="stat-card"] [class~="text-slate-900"] { color: #f1f5f9 !important; }
+
+/* Tablo */
+.dark [class~="table-th"] {
+  background-color: #1a2a3a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+.dark [class~="table-td"] {
+  border-color: #2a3a4f !important;
+  color: #cbd5e1 !important;
+}
+
+/* Sidebar bölücü çizgiler */
+.dark aside [class~="border-slate-100"] { border-color: #1e2d3d !important; }

@@ -11,9 +11,12 @@ import {
   ArrowLeft, User, ImageIcon, Pill, AlertTriangle, FileText,
   Plus, X, ZoomIn, ChevronDown, ChevronUp, CheckCircle2,
   Loader2, Camera, StickyNote, Trash2, ArrowLeftRight, Tag,
-  ScanLine, Activity, Clock, Cpu,
+  ScanLine, Activity, Clock, Cpu, Pencil,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PhotoAnnotator from '../components/PhotoAnnotator';
+import LesionTrendChart from '../components/LesionTrendChart';
+import PdfExportButton from '../components/PdfExportButton';
 
 const ANGLE_LABELS = { front: 'Ön Görünüm', right: 'Sağ Yanak', left: 'Sol Yanak' };
 const COUNT_LABELS = [
@@ -22,6 +25,13 @@ const COUNT_LABELS = [
   ['nodule', 'Nodül'],
   ['comedone', 'Komedon'],
 ];
+
+const resolveAnnotatedUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/storage/annotated/')) return `/api/ai${url}`;
+  return url.startsWith('/') ? url : `/${url}`;
+};
 
 // Confidence → colour
 const confColor = (c) => {
@@ -105,11 +115,13 @@ function AiPhotoCard({ photo }) {
               {hasAnnotated && (
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Annotate Edilmiş Görüntü</p>
-                  <img
-                    src={`http://localhost:8000${result.annotated_image_url}`}
-                    alt="Annotated"
-                    className="w-full rounded-xl border border-slate-200 shadow-sm"
-                  />
+                  <div className="flex justify-center">
+                    <img
+                      src={resolveAnnotatedUrl(result.annotated_image_url)}
+                      alt="Annotated"
+                      className="max-h-80 w-auto rounded-xl border border-slate-200 shadow-sm object-contain"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -232,7 +244,7 @@ function AiAnalysisSection({ photos }) {
     );
   }
   return (
-    <div className="p-5 space-y-3">
+    <div className="space-y-3">
       <p className="text-xs text-slate-500 bg-violet-50 px-3 py-2 rounded-lg border border-violet-100">
         Her fotoğraf yüklendiğinde YOLO11 tabanlı analiz otomatik çalışır; lezyon
         sayımı, Hayashi şiddeti ve görüntü kalitesi birlikte raporlanır.
@@ -265,6 +277,7 @@ function SectionHeader({ icon: Icon, title, count, open, onToggle, action }) {
 
 function PhotoViewer({ photos }) {
   const [selected, setSelected] = useState(null);
+  const [annotating, setAnnotating] = useState(null); // photo to annotate
   const [compareMode, setCompareMode] = useState(false);
   const [compareA, setCompareA] = useState(null);
   const [compareB, setCompareB] = useState(null);
@@ -345,15 +358,23 @@ function PhotoViewer({ photos }) {
                   {grouped[dateKey].map((ph) => (
                     <div
                       key={ph.id}
-                      onClick={() => setSelected(ph)}
-                      className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 cursor-zoom-in hover:shadow-md transition-all"
+                      className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-all"
                     >
-                      <img src={ph.fileUrl} alt={ANGLE_LABELS[ph.angle]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                      <img
+                        src={ph.fileUrl}
+                        alt={ANGLE_LABELS[ph.angle]}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
+                        onClick={() => setSelected(ph)}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 flex items-end justify-between">
                         <p className="text-white text-[10px] font-medium">{ANGLE_LABELS[ph.angle]}</p>
+                        <button
+                          onClick={e => { e.stopPropagation(); setAnnotating(ph); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 rounded p-1"
+                          title="Annotasyon Ekle"
+                        >
+                          <Pencil size={11} className="text-white" />
+                        </button>
                       </div>
                       {!ph.qualityApproved && (
                         <div className="absolute top-1.5 right-1.5 bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">DÜŞÜK KALİTE</div>
@@ -373,7 +394,7 @@ function PhotoViewer({ photos }) {
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setSelected(null)}
         >
-          <div className="max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-white font-semibold">{ANGLE_LABELS[selected.angle]}</p>
@@ -386,9 +407,18 @@ function PhotoViewer({ photos }) {
                 <X size={18} />
               </button>
             </div>
-            <img src={selected.fileUrl} alt="" className="w-full rounded-xl" />
+            <img src={selected.fileUrl} alt="" className="w-full max-h-96 object-contain rounded-xl" />
           </div>
         </div>
+      )}
+
+      {/* Annotation Modal */}
+      {annotating && (
+        <PhotoAnnotator
+          photo={annotating}
+          imageUrl={`http://localhost:8080${annotating.fileUrl}`}
+          onClose={() => setAnnotating(null)}
+        />
       )}
     </div>
   );
@@ -506,6 +536,13 @@ function MedicationSection({ patientId }) {
   );
 }
 
+const NOTE_TEMPLATES = [
+  { label: 'Kontrol', text: 'Hasta kontrole geldi. Lezyon sayısında belirgin değişiklik gözlemlenmedi. Mevcut tedaviye devam edilmesine karar verildi.' },
+  { label: 'İyileşme', text: 'Son kontrole kıyasla belirgin iyileşme gözlemlendi. Aktif inflamatuar lezyon sayısında azalma mevcut. Tedavi planı güncellendi.' },
+  { label: 'Kötüleşme', text: 'Lezyon sayısında artış tespit edildi. Yeni tedavi protokolü değerlendiriliyor. Bir sonraki kontrolde AI analizi ile karşılaştırma yapılacak.' },
+  { label: 'İlaç Değişimi', text: 'Yan etkiler nedeniyle ilaç tedavisinde değişikliğe gidildi. Yeni tedaviye uyum ve tolerabilite yakından izlenecek.' },
+];
+
 function NotesSection({ patientId }) {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -533,6 +570,19 @@ function NotesSection({ patientId }) {
     <div className="p-5 space-y-4">
       <form onSubmit={handleAdd} className="space-y-2">
         <label className="label">Yeni Not Ekle</label>
+        {/* Templates */}
+        <div className="flex flex-wrap gap-1.5 mb-1">
+          {NOTE_TEMPLATES.map(t => (
+            <button
+              key={t.label}
+              type="button"
+              onClick={() => setText(t.text)}
+              className="text-xs px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <textarea
           className="input resize-none"
           rows={3}
@@ -714,6 +764,7 @@ export default function PatientDetailPage() {
               </span>
             </div>
           </div>
+          <PdfExportButton patient={patient} photos={photos} />
         </div>
       </div>
 
@@ -757,7 +808,12 @@ export default function PatientDetailPage() {
             open={openSections.aiAnalysis}
             onToggle={() => toggle('aiAnalysis')}
           />
-          {openSections.aiAnalysis && <AiAnalysisSection photos={photos} />}
+          {openSections.aiAnalysis && (
+            <div className="p-4 space-y-4">
+              <LesionTrendChart patientId={id} />
+              <AiAnalysisSection photos={photos} />
+            </div>
+          )}
         </div>
 
         {/* Medications */}

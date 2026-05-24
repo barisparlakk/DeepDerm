@@ -7,9 +7,9 @@ axios.interceptors.request.use(config => {
 });
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
-export const apiGetDashboard = async () => {
-  return { totalPatients: 0, pendingReviews: 0, newPhotos: 0, emergencyAlerts: 0 };
-};
+export const apiGetDashboard = async () => (await axios.get('/api/dashboard')).data;
+export const apiGetSeverityDistribution = async () => (await axios.get('/api/dashboard/severity-distribution')).data;
+export const apiGetRecentPhotos = async () => (await axios.get('/api/dashboard/recent-photos')).data;
 
 // ─── Patients ────────────────────────────────────────────────────────────────
 export const apiGetPatients = async () => (await axios.get('/api/patients')).data;
@@ -31,16 +31,16 @@ export const apiGetSideEffects = async (patientId) => (await axios.get(`/api/pat
 
 // ─── Emergency Alerts ────────────────────────────────────────────────────────
 export const apiGetEmergencyAlerts = async (patientId) => (await axios.get(`/api/patients/${patientId}/emergency-alerts`)).data;
-export const apiResolveAlert = async (alertId, patientId) => { return { success: true }; };
+export const apiResolveAlert = async (alertId, patientId) => (await axios.patch(`/api/patients/${patientId}/emergency-alerts/${alertId}/resolve`)).data;
 
 // ─── Notes ───────────────────────────────────────────────────────────────────
 export const apiGetNotes = async (patientId) => (await axios.get(`/api/patients/${patientId}/notes`)).data;
 export const apiAddNote = async (patientId, noteText) => (await axios.post(`/api/patients/${patientId}/notes`, { noteText })).data;
 
 // ─── Notifications ───────────────────────────────────────────────────────────
-export const apiGetNotifications = async () => [];
-export const apiMarkNotificationRead = async (id) => { return { success: true }; };
-export const apiMarkAllRead = async () => { return { success: true }; };
+export const apiGetNotifications = async () => (await axios.get('/api/notifications')).data;
+export const apiMarkNotificationRead = async (id) => (await axios.patch(`/api/notifications/${id}/read`)).data;
+export const apiMarkAllRead = async () => (await axios.post('/api/notifications/read-all')).data;
 
 // ─── AI Labels ───────────────────────────────────────────────────────────────
 export const apiAddAiLabel = async (photoId, label, parametricValues) => {

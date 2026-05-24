@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 
 export default function Layout({ children }) {
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-slate-100 dark:bg-slate-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-6 lg:p-8">
