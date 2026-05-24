@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
     List<Patient> findByDoctorId(UUID doctorId);
+    long countByDoctorId(UUID doctorId);
     Optional<Patient> findByIdAndDoctorId(UUID id, UUID doctorId);
     Optional<Patient> findByEmail(String email);
 }

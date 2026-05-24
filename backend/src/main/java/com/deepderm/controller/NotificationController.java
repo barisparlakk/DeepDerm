@@ -77,4 +77,15 @@ public class NotificationController {
         });
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/read-all")
+    public ResponseEntity<Void> markAllRead(@AuthenticationPrincipal Doctor doctor) {
+        List<EmergencyAlert> alerts = emergencyAlertRepository
+                .findByPatientDoctorIdAndResolvedFalseOrderBySentAtDesc(doctor.getId());
+        for (EmergencyAlert a : alerts) {
+            a.setResolved(true);
+        }
+        emergencyAlertRepository.saveAll(alerts);
+        return ResponseEntity.noContent().build();
+    }
 }

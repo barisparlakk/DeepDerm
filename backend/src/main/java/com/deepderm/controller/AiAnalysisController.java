@@ -2,6 +2,7 @@ package com.deepderm.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -55,6 +56,34 @@ public class AiAnalysisController {
         } catch (Exception e) {
             return ResponseEntity.status(503)
                     .body(Map.of("error", "AI service unavailable: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/ai/storage/annotated/{filename}
+     * Proxies annotated images so the web app never needs the DermAI host.
+     */
+    @GetMapping(value = "/storage/annotated/{filename:.+}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getAnnotatedImage(@PathVariable String filename) {
+        try {
+            byte[] image = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .pathSegment("storage", "annotated", filename)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .timeout(TIMEOUT)
+                    .block();
+            if (image == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(image);
+        } catch (WebClientResponseException.NotFound e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(503).build();
         }
     }
 
